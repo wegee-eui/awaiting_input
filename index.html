@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee | Maple Leaf 6s Test</title>
+    <title>Wegee | Maple Leaf 6s Final Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,18 +11,13 @@
             width: 100%; height: 100%;
             background-color: #ffffff;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
         }
 
         .container {
             width: 100%;
             max-width: 1200px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            display: flex; justify-content: center; align-items: center;
         }
 
         .content-box {
@@ -31,54 +26,58 @@
             aspect-ratio: 4 / 3;
             position: relative;
             background-color: #ffffff;
-            display: flex;
-            justify-content: center;
             overflow: hidden;
         }
 
-        /* 1. 가지: 끝부분을 둥글게 처리하고 잎과 겹치도록 설정 */
+        /* 1. 나뭇가지: 위치를 고정하고 잎이 그 위에 덮이도록 설정 */
         .branch {
             position: absolute;
             top: 0;
+            left: 50%;
             width: 6px;
-            height: 6%; /* 세로의 약 1/20 */
+            height: 6%; 
             background: #5D4037; 
-            border-radius: 0 0 4px 4px;
+            transform: translateX(-50%);
+            border-radius: 0 0 2px 2px;
             z-index: 2;
         }
 
-        /* 2. 나뭇잎: 명암 및 무늬 추가 */
+        /* 2. 나뭇잎: 가지 끝에 완전히 밀착 */
         .leaf {
             position: absolute;
-            top: 5.5%; /* 가지와 자연스럽게 겹치도록 살짝 내림 */
+            top: 6%; /* 가지의 height와 동일하게 맞춤 (틈새 제거) */
+            left: 50%;
             width: 40px;
-            height: 50px;
-            /* 기본 연두색 + 메이플 특유의 밝은 소용돌이 명암 재현 */
-            background: radial-gradient(circle at 30% 30%, #C5E1A5 10%, #8BC34A 50%, #689F38 90%);
+            height: 52px;
+            margin-left: -20px; /* 가로 중앙 정렬 */
+            background: radial-gradient(circle at 35% 35%, #D4E157 5%, #8BC34A 50%, #558B2F 95%);
             border: 2px solid #2E7D32; 
-            border-radius: 5% 90% 5% 90%;
-            box-shadow: inset -3px -3px 5px rgba(0,0,0,0.1); /* 내부 명암 */
-            transform-origin: top center;
+            border-radius: 2px 90% 2px 90%; /* 메이플 특유의 뾰족한 잎 형태 */
+            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15);
+            transform-origin: top center; /* 가지 끝을 기준으로 회전 */
             z-index: 3;
         }
 
-        /* 나뭇잎 중앙 인맥 표현 */
+        /* 3. 나뭇잎 중앙 인맥: 잎 전체를 정석으로 가로지름 */
         .leaf::after {
             content: '';
             position: absolute;
-            top: 10%; left: 50%;
-            width: 2px; height: 80%;
-            background: rgba(46, 125, 50, 0.3);
+            top: 0; 
+            left: 50%;
+            width: 2px; 
+            height: 100%; /* 잎 전체 길이만큼 */
+            background: rgba(46, 125, 50, 0.4);
             transform: translateX(-50%);
         }
 
         .shadow {
             position: absolute;
             bottom: 5%;
+            left: 50%;
             width: 40px; height: 10px;
             background: rgba(0, 0, 0, 0.08);
             border-radius: 50%;
-            transform: scale(0);
+            transform: translateX(-50%) scale(0);
             z-index: 1;
         }
 
@@ -86,8 +85,8 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: #fff; font-size: 9pt; text-align: center; line-height: 1.8;
-            opacity: 0; pointer-events: none; transition: opacity 0.8s; z-index: 10;
+            background: #fff; font-size: 9pt; text-align: center;
+            opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 10;
         }
 
         #credit-screen.visible { opacity: 1; pointer-events: auto; }
@@ -99,7 +98,7 @@
 
         @media (max-width: 768px) {
             body { align-items: flex-start; }
-            .container { margin-top: 15vh; align-items: flex-start; }
+            .container { margin-top: 15vh; }
         }
     </style>
 </head>
@@ -129,33 +128,36 @@
 
         const tl = gsap.timeline();
 
-        // [테스트 버전] 전체 6초 구성
-        // 1. 5.5초 동안 좌우 흔들림 (빠르게 반복)
+        // 1. 초기 흔들림 (5초 동안 더 천천히 살랑거림)
         tl.to(leaf, {
             rotation: 45,
-            duration: 0.8,
+            duration: 1.25, // 속도를 0.8에서 1.25로 늦춤
             ease: "sine.inOut",
-            repeat: 6, 
+            repeat: 3, // 약 5초간 진행
             yoyo: true
         });
 
-        // 2. 5.5초 시점에 낙하 시작
-        gsap.delayedCall(5.5, () => {
+        // 2. 5초 시점에 낙하 시작 (총 6초를 맞추기 위해 낙하 시간을 1초로 조정)
+        gsap.delayedCall(5, () => {
             tl.kill(); 
 
-            // 하단으로 지그재그 낙하 (0.5초 - 빠른 확인용)
+            // 하단으로 지그재그 살랑살랑 낙하 (천천히 1초 동안)
             gsap.to(leaf, {
                 y: "750%", 
-                rotation: 95,
-                duration: 0.5,
+                rotation: 110, // 바닥에 더 평평하게 눕도록
+                duration: 1, 
                 ease: "power1.out",
                 onUpdate: function() {
-                    gsap.set(leaf, { x: Math.sin(this.progress() * 10) * 30 });
+                    // 낙하 시 가로 스윙 폭을 조절하여 살랑거림 표현
+                    gsap.set(leaf, { x: Math.sin(this.progress() * 8) * 35 });
                 },
-                onComplete: () => credit.classList.add('visible')
+                onComplete: () => {
+                    gsap.to(credit, { opacity: 1, duration: 1, pointerEvents: "auto" });
+                }
             });
 
-            gsap.to(shadow, { scale: 1, duration: 0.5 });
+            // 그림자 애니메이션
+            gsap.to(shadow, { scale: 1.2, duration: 1, ease: "power1.out" });
         });
     </script>
 </body>
