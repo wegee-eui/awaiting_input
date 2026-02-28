@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee | Leaf Vertical Line Fix</title>
+    <title>Wegee | Maple Leaf 6s Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,13 +11,18 @@
             width: 100%; height: 100%;
             background-color: #ffffff;
             overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .container {
             width: 100%;
             max-width: 1200px;
-            display: flex; justify-content: center; align-items: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
 
         .content-box {
@@ -26,62 +31,54 @@
             aspect-ratio: 4 / 3;
             position: relative;
             background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        /* 1. 나뭇가지: 끝부분을 정교하게 마감 */
+        /* 1. 가지: 끝부분을 둥글게 처리하고 잎과 겹치도록 설정 */
         .branch {
             position: absolute;
             top: 0;
-            left: 40%;
             width: 6px;
-            height: 6%; 
+            height: 6%; /* 세로의 약 1/20 */
             background: #5D4037; 
-            transform: translateX(-50%);
+            border-radius: 0 0 4px 4px;
             z-index: 2;
-            border-radius: 4px
         }
 
-        /* 2. 나뭇잎: 가지 끝에 수치상 빈틈없이 밀착 */
+        /* 2. 나뭇잎: 명암 및 무늬 추가 */
         .leaf {
             position: absolute;
-            top: 6%; /* branch height와 일치시켜 틈새 제거 */
-            left: 50%;
+            top: 5.5%; /* 가지와 자연스럽게 겹치도록 살짝 내림 */
             width: 40px;
-            height: 52px;
-            margin-left: -20px;
-            rotation: 60,
-            background: radial-gradient(circle at 35% 35%, #D4E157 5%, #8BC34A 50%, #558B2F 95%);
+            height: 50px;
+            /* 기본 연두색 + 메이플 특유의 밝은 소용돌이 명암 재현 */
+            background: radial-gradient(circle at 30% 30%, #C5E1A5 10%, #8BC34A 50%, #689F38 90%);
             border: 1px solid #2E7D32; 
-            /* 좌우 대칭을 맞추어 중앙선이 정중앙에 오도록 조정 */
-            border-radius: 4px 90% 4px 90%; 
-            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15);
+            border-radius: 5% 90% 5% 90%;
+            box-shadow: inset -3px -3px 5px rgba(0,0,0,0.1); /* 내부 명암 */
             transform-origin: top center;
             z-index: 3;
-            display: flex;
-            justify-content: center;
         }
 
-        /* 3. 나뭇잎 중앙 인맥: 잎의 세로축을 정확히 관통 */
+        /* 나뭇잎 중앙 인맥 표현 */
         .leaf::after {
             content: '';
             position: absolute;
-            top: 0;
-            /* 가로 중앙 정렬 */
-            left: 50%;
-            width: 2px;
-            height: 100%;
-            background: rgba(46, 125, 50, 0.5); /* 선명도 약간 높임 */
+            top: 10%; left: 50%;
+            width: 2px; height: 80%;
+            background: rgba(46, 125, 50, 0.3);
             transform: translateX(-50%);
         }
 
         .shadow {
             position: absolute;
             bottom: 5%;
-            left: 50%;
             width: 40px; height: 10px;
             background: rgba(0, 0, 0, 0.08);
             border-radius: 50%;
-            transform: translateX(-50%) scale(0);
+            transform: scale(0);
             z-index: 1;
         }
 
@@ -89,8 +86,8 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: #fff; font-size: 9pt; text-align: center;
-            opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 10;
+            background: #fff; font-size: 9pt; text-align: center; line-height: 1.8;
+            opacity: 0; pointer-events: none; transition: opacity 0.8s; z-index: 10;
         }
 
         #credit-screen.visible { opacity: 1; pointer-events: auto; }
@@ -102,7 +99,7 @@
 
         @media (max-width: 768px) {
             body { align-items: flex-start; }
-            .container { margin-top: 15vh; }
+            .container { margin-top: 15vh; align-items: flex-start; }
         }
     </style>
 </head>
@@ -132,35 +129,33 @@
 
         const tl = gsap.timeline();
 
-        // 1. 초기 흔들림 (천천히 살랑거림 - 5초)
+        // [테스트 버전] 전체 6초 구성
+        // 1. 5.5초 동안 좌우 흔들림 (빠르게 반복)
         tl.to(leaf, {
             rotation: 45,
-            duration: 1.25,
+            duration: 0.8,
             ease: "sine.inOut",
-            repeat: 3, 
+            repeat: 6, 
             yoyo: true
         });
 
-        // 2. 6.4초 시점에 낙하 시작
+        // 2. 5.5초 시점에 낙하 시작
         gsap.delayedCall(6.4, () => {
             tl.kill(); 
 
-            // 하단으로 지그재그 낙하 (천천히 1초)
+            // 하단으로 지그재그 낙하
             gsap.to(leaf, {
                 y: "750%", 
-                rotation: 105, 
-                duration: 1, 
+                rotation: 95,
+                duration: 1.25,
                 ease: "power1.out",
                 onUpdate: function() {
-                    // 가로 흔들림 폭을 살짝 줄여 부드럽게 낙하
-                    gsap.set(leaf, { x: Math.sin(this.progress() * 8) * 30 });
+                    gsap.set(leaf, { x: Math.sin(this.progress() * 10) * 30 });
                 },
-                onComplete: () => {
-                    credit.classList.add('visible');
-                }
+                onComplete: () => credit.classList.add('visible')
             });
 
-            gsap.to(shadow, { scale: 1.2, duration: 1, ease: "power1.out" });
+            gsap.to(shadow, { scale: 1, duration: 0.5 });
         });
     </script>
 </body>
