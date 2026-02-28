@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee - Leaf Pixelation Project</title>
+    <title>Wegee - Leaf Pixelation Final</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -14,7 +14,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+            font-family: "Malgun Gothic", sans-serif;
         }
 
         .container {
@@ -28,7 +28,7 @@
 
         .content-box {
             width: 22.16%; 
-            min-width: 200px;
+            min-width: 240px;
             aspect-ratio: 4 / 3;
             position: relative;
             background: #fff;
@@ -40,7 +40,7 @@
         canvas {
             width: 100%;
             height: 100%;
-            image-rendering: pixelated; /* 픽셀 느낌 극대화 */
+            image-rendering: pixelated;
         }
 
         #credit-screen {
@@ -90,43 +90,50 @@
         const ctx = canvas.getContext('2d');
         const creditScreen = document.getElementById('credit-screen');
 
-        const DURATION = 400; // 6분 40초 (초 단위)
+        const DURATION = 400; // 6분 40초
         let startTime = null;
+        let lastUpdateTime = -3000; // 즉시 첫 프레임을 그리기 위함
 
-        // 캔버스 크기 설정
         canvas.width = 400;
         canvas.height = 300;
 
-        // 나뭇잎 이미지를 캔버스에 그리는 함수 (사진 스타일 반영)
-        function drawLeaf(context, size) {
+        function drawLeaf(context) {
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
             
-            // 그림자
-            context.fillStyle = 'rgba(0,0,0,0.1)';
+            context.save();
+            context.translate(cx, cy);
+            context.rotate(Math.PI / 4); // 나뭇잎이 살짝 누워있는 각도 (45도)
+
+            // 1. 나뭇잎 테두리 (진한 녹색)
+            context.fillStyle = '#2E7D32'; 
             context.beginPath();
-            context.ellipse(cx, cy + 60, 40, 10, 0, 0, Math.PI * 2);
+            context.moveTo(0, -90);
+            context.quadraticCurveTo(80, 0, 0, 90);
+            context.quadraticCurveTo(-80, 0, 0, -90);
             context.fill();
 
-            // 나뭇잎 본체 (사진의 연두색 그라데이션 스타일)
-            const grad = context.createRadialGradient(cx, cy, 5, cx, cy, 80);
-            grad.addColorStop(0, '#a8e063');
-            grad.addColorStop(1, '#56ab2f');
+            // 2. 나뭇잎 내부 (그라디언트)
+            const leafGrad = context.createRadialGradient(-10, -10, 5, 0, 0, 100);
+            leafGrad.addColorStop(0, '#D4E157'); // 밝은 연두
+            leafGrad.addColorStop(1, '#689F38'); // 짙은 녹색
             
-            context.fillStyle = grad;
+            context.fillStyle = leafGrad;
             context.beginPath();
-            context.moveTo(cx, cy - 80);
-            context.quadraticCurveTo(cx + 70, cy, cx, cy + 80);
-            context.quadraticCurveTo(cx - 70, cy, cx, cy - 80);
+            context.moveTo(0, -86);
+            context.quadraticCurveTo(76, 0, 0, 86);
+            context.quadraticCurveTo(-76, 0, 0, -86);
             context.fill();
 
-            // 잎맥 (중앙 선)
-            context.strokeStyle = 'rgba(255,255,255,0.3)';
-            context.lineWidth = 2;
+            // 3. 중앙 잎맥
+            context.strokeStyle = 'rgba(46, 125, 50, 0.5)';
+            context.lineWidth = 3;
             context.beginPath();
-            context.moveTo(cx, cy - 70);
-            context.lineTo(cx, cy + 70);
+            context.moveTo(0, -80);
+            context.lineTo(0, 80);
             context.stroke();
+
+            context.restore();
         }
 
         function animate(timestamp) {
@@ -134,34 +141,35 @@
             const elapsed = (timestamp - startTime) / 1000;
             const progress = Math.min(elapsed / DURATION, 1);
 
-            // 픽셀 크기 계산: 1(원본)에서 시작하여 끝날 때 400(하나의 사각형)으로 증가
-            // 처음에는 변화가 거의 없다가 나중에 급격히 커지도록 제곱근 사용
-            const pixelSize = 1 + Math.pow(progress, 2) * 399;
+            // 💡 3초마다만 업데이트 (3000ms)
+            if (timestamp - lastUpdateTime >= 3000 || progress >= 1) {
+                lastUpdateTime = timestamp;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            if (progress < 1) {
-                // 1. 임시 캔버스에 원본 나뭇잎 그리기
-                const offCanvas = document.createElement('canvas');
-                offCanvas.width = canvas.width;
-                offCanvas.height = canvas.height;
-                const offCtx = offCanvas.getContext('2d');
-                drawLeaf(offCtx);
+                if (progress < 1) {
+                    const offCanvas = document.createElement('canvas');
+                    offCanvas.width = canvas.width;
+                    offCanvas.height = canvas.height;
+                    const offCtx = offCanvas.getContext('2d');
+                    drawLeaf(offCtx);
 
-                // 2. 메인 캔버스에 작게 그렸다가 크게 확대하여 픽셀화 구현
-                const w = canvas.width / pixelSize;
-                const h = canvas.height / pixelSize;
-                
-                ctx.imageSmoothingEnabled = false; // 안티앨리어싱 제거
-                ctx.drawImage(offCanvas, 0, 0, canvas.width, canvas.height, 0, 0, w, h);
-                ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
-
-                requestAnimationFrame(animate);
-            } else {
-                // 애니메이션 종료 시 크레딧 표시
-                canvas.style.display = 'none';
-                creditScreen.classList.add('visible');
+                    // 픽셀 사이즈 결정 (점점 커짐)
+                    const pixelSize = 1 + (Math.pow(progress, 1.5) * 399);
+                    
+                    const w = Math.max(1, canvas.width / pixelSize);
+                    const h = Math.max(1, canvas.height / pixelSize);
+                    
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(offCanvas, 0, 0, canvas.width, canvas.height, 0, 0, w, h);
+                    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+                } else {
+                    canvas.style.display = 'none';
+                    creditScreen.classList.add('visible');
+                    return;
+                }
             }
+            requestAnimationFrame(animate);
         }
 
         requestAnimationFrame(animate);
