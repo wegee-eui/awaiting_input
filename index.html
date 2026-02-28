@@ -7,6 +7,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
+
 body,html{
     width:100%;
     height:100%;
@@ -34,11 +35,20 @@ body,html{
     position:relative;
 }
 
+/* 캔버스 */
 canvas{
+    position:absolute;
+    inset:0;
     width:100%;
     height:100%;
-    display:block;
-    background:#ffffff;
+    background:#fff;
+}
+
+/* bubble layer (전체 화면) */
+#bubble-layer{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
 }
 
 /* 크레딧 */
@@ -55,13 +65,11 @@ canvas{
     line-height:1.8;
     background:#fff;
     opacity:0;
-    pointer-events:none;
     transition:opacity 1s ease;
 }
 
 #credit-screen.visible{
     opacity:1;
-    pointer-events:auto;
 }
 
 .replay-btn{
@@ -79,7 +87,8 @@ canvas{
 <div class="container">
 <div class="content-box">
 
-<canvas id="stage"></canvas>
+<canvas id="intro"></canvas>
+<canvas id="bubble-layer"></canvas>
 
 <div id="credit-screen">
 <p>Concept & Production: Wegee</p>
@@ -94,109 +103,115 @@ canvas{
 </div>
 
 <script>
-const canvas = document.getElementById('stage');
-const ctx = canvas.getContext('2d');
-const credit = document.getElementById('credit-screen');
+// ================= intro =================
+const intro = document.getElementById('intro');
+const ictx = intro.getContext('2d');
 
-let startTime;
-let animationId;
-
-function resize(){
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * devicePixelRatio;
-    canvas.height = rect.height * devicePixelRatio;
+function resizeIntro(){
+    const r=intro.getBoundingClientRect();
+    intro.width=r.width*devicePixelRatio;
+    intro.height=r.height*devicePixelRatio;
 }
-resize();
-window.addEventListener('resize', resize);
+resizeIntro();
+window.addEventListener('resize',resizeIntro);
 
-function drawCircle(x,y,r,color="#e3e3e3"){
+function drawCircle(ctx,x,y,r,color="#e3e3e3"){
     ctx.beginPath();
     ctx.arc(x,y,r,0,Math.PI*2);
     ctx.fillStyle=color;
     ctx.fill();
 }
 
+// ================= bubble =================
+const bubbleCanvas=document.getElementById('bubble-layer');
+const bctx=bubbleCanvas.getContext('2d');
+const credit=document.getElementById('credit-screen');
+
+let bubbles=[];
+let startTime;
+let phase="intro";
+
+function resizeBubble(){
+    bubbleCanvas.width=window.innerWidth*devicePixelRatio;
+    bubbleCanvas.height=window.innerHeight*devicePixelRatio;
+}
+resizeBubble();
+window.addEventListener('resize',resizeBubble);
+
+// 불규칙 bubble 생성
+function spawnBubble(){
+    const colors=["#e3e3e3","#f7ff00","#ff2bd6"];
+    bubbles.push({
+        x: Math.random()*bubbleCanvas.width,
+        y: bubbleCanvas.height + Math.random()*40,
+        r: (3 + Math.random()*3)*devicePixelRatio,
+        speed: (0.5 + Math.random()*1.2)*devicePixelRatio,
+        color: colors[Math.floor(Math.random()*colors.length)]
+    });
+}
+
+// ================= animation =================
 function animate(t){
-    if(!startTime) startTime = t;
-    const time = (t - startTime) / 1000; // seconds
+    if(!startTime) startTime=t;
+    const time=(t-startTime)/1000;
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // ---------- intro (0–5s) ----------
+    if(phase==="intro"){
+        ictx.clearRect(0,0,intro.width,intro.height);
 
-    const cx = canvas.width/2;
-    const cy = canvas.height/2;
-    const r = 10 * devicePixelRatio;
-
-    // ===== 0–5초: 회전 =====
-    if(time <= 5){
-        const rot = time * 1.5;
+        const cx=intro.width/2;
+        const cy=intro.height/2;
+        const rot=time*1.5;
 
         for(let i=0;i<7;i++){
-            const angle = rot + (Math.PI*2/7)*i;
-            const radius = 40 * devicePixelRatio;
-            const x = cx + Math.cos(angle)*radius;
-            const y = cy + Math.sin(angle)*radius;
-            drawCircle(x,y,r);
+            const angle=rot+(Math.PI*2/7)*i;
+            const radius=26*devicePixelRatio; // 🔹 축소
+            const x=cx+Math.cos(angle)*radius;
+            const y=cy+Math.sin(angle)*radius;
+            drawCircle(ictx,x,y,6*devicePixelRatio); // 🔹 원 축소
+        }
+
+        if(time>=5){
+            phase="bubble";
+            startTime=t;
         }
     }
 
-    // ===== 5–8초: 퍼짐 + 패턴 =====
-    else if(time <= 8){
-        const p = (time-5)/3;
+    // ---------- bubble fill ----------
+    else if(phase==="bubble"){
+        bctx.clearRect(0,0,bubbleCanvas.width,bubbleCanvas.height);
 
-        const gap = 24 * devicePixelRatio;
+        // 계속 생성
+        if(bubbles.length<900){
+            for(let i=0;i<8;i++) spawnBubble();
+        }
 
-        for(let y=0;y<canvas.height+gap;y+=gap){
-            for(let x=0;x<canvas.width+gap;x+=gap){
-                const offset = (Math.floor(y/gap)%2)*gap/2;
-                drawCircle(x+offset,y,r);
-            }
+        for(const b of bubbles){
+            b.y-=b.speed;
+            drawCircle(bctx,b.x,b.y,b.r,b.color);
+        }
+
+        // 거의 찼으면 종료
+        if(bubbles.length>850){
+            setTimeout(()=>{
+                credit.classList.add("visible");
+            },800);
+            return;
         }
     }
 
-    // ===== 8–10초: 형광 채색 =====
-    else if(time <= 10){
-        const p = (time-8)/2;
-
-        const gap = 24 * devicePixelRatio;
-        const fillHeight = canvas.height * p;
-
-        for(let y=0;y<canvas.height+gap;y+=gap){
-            for(let x=0;x<canvas.width+gap;x+=gap){
-
-                const offset = (Math.floor(y/gap)%2)*gap/2;
-
-                let color="#e3e3e3";
-
-                if(y > canvas.height - fillHeight){
-                    color = (Math.floor(x/gap)%2===0)
-                        ? "#f7ff00"   // 형광 노랑
-                        : "#ff2bd6";  // 형광 핑크
-                }
-
-                drawCircle(x+offset,y,r,color);
-            }
-        }
-    }
-
-    // ===== 종료 =====
-    if(time >= 10){
-        cancelAnimationFrame(animationId);
-        credit.classList.add('visible');
-        return;
-    }
-
-    animationId = requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
 }
 
 function start(){
-    credit.classList.remove('visible');
-    startTime = null;
-    animationId = requestAnimationFrame(animate);
+    bubbles=[];
+    phase="intro";
+    startTime=null;
+    credit.classList.remove("visible");
+    requestAnimationFrame(animate);
 }
 
-function replay(){
-    start();
-}
+function replay(){ start(); }
 
 start();
 </script>
