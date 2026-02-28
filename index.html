@@ -3,31 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee - Leaf Animation Project</title>
+    <title>Wegee - Flower Petal Animation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        /* 기본 리셋 및 배경 설정 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body, html {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             background-color: #ffffff;
-            overflow: hidden; /* 스크롤 방지 */
+            overflow: hidden;
             display: flex;
-            font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Dotum", sans-serif;
+            font-family: "Malgun Gothic", sans-serif;
         }
 
-        /* [데스크탑 & 아이패드] 상하좌우 중앙 정렬 */
-        body {
-            justify-content: center;
-            align-items: center;
-        }
+        body { justify-content: center; align-items: center; }
 
-        /* 전체 컨테이너 */
         .container {
             width: 100%;
             max-width: 1200px;
@@ -37,77 +27,62 @@
             position: relative;
         }
 
-        /* 애니메이션 박스 
-           데스크탑 1200px 기준 가로 266px (약 22.16%)
-        */
         .content-box {
             width: 22.16%; 
-            min-width: 200px;
-            aspect-ratio: 4 / 3; /* 가로가 긴 4:3 비율 */
+            min-width: 240px;
+            aspect-ratio: 4 / 3;
             position: relative;
+            background-color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        video {
-            width: 100%;
-            height: auto;
-            display: block;
+        /* 꽃잎들이 담길 그룹 */
+        .flower-wrapper {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* 크레딧 스타일 (9pt, 검정색, 고딕체) */
+        /* 개별 꽃잎 스타일 (메이플 2008 감성) */
+        .petal {
+            position: absolute;
+            width: 30px;
+            height: 45px;
+            /* 어두운 인디고 -> 밝은 푸른 파란색 그라디언트 */
+            background: linear-gradient(135deg, #303F9F 0%, #2196F3 100%);
+            /* 메이플 특유의 진한 외곽 테두리 */
+            border: 2px solid #1A237E;
+            border-radius: 50% 50% 10% 10% / 80% 80% 20% 20%;
+            /* 회전축을 꽃잎 하단 중앙으로 설정 */
+            transform-origin: center bottom;
+            /* 꽃잎 사이 3px 간격을 위한 초기 오프셋 (수학적 배치 전) */
+            bottom: 50%;
+        }
+
+        /* 크레딧 스타일 */
         #credit-screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #000000;
-            font-size: 9pt;
-            text-align: center;
-            line-height: 1.8;
-            background-color: #ffffff;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 1s ease-in-out;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background-color: #ffffff; color: #000; font-size: 9pt; text-align: center;
+            opacity: 0; pointer-events: none; transition: opacity 1s ease;
         }
 
-        /* 애니메이션 종료 후 크레딧 활성화 */
-        #credit-screen.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        #credit-screen.visible { opacity: 1; pointer-events: auto; }
 
-        .hidden {
-            display: none !important;
-        }
-
-        /* 재시청 버튼 (원하실 경우 사용) */
         .replay-btn {
-            margin-top: 15px;
-            padding: 5px 12px;
-            background: none;
-            border: 1px solid #000;
-            font-size: 8pt;
-            cursor: pointer;
+            margin-top: 15px; padding: 5px 12px; background: none;
+            border: 1px solid #000; font-size: 8pt; cursor: pointer;
         }
 
-        /* [모바일 반응형] 
-           상, 좌, 우 여백 유지 및 하단이 남는 포맷
-        */
         @media (max-width: 768px) {
-            body {
-                align-items: flex-start; /* 상단 정렬 */
-            }
-            .container {
-                margin-top: 15vh; /* 상단 여백 확보 */
-                align-items: flex-start;
-            }
+            body { align-items: flex-start; }
+            .container { margin-top: 15vh; }
         }
     </style>
 </head>
@@ -115,10 +90,13 @@
 
     <div class="container">
         <div class="content-box">
-            <video id="main-video" autoplay muted playsinline>
-                <source src="animation.mp4" type="video/mp4">
-                브라우저가 비디오를 지원하지 않습니다.
-            </video>
+            <div class="flower-wrapper" id="flower">
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+            </div>
 
             <div id="credit-screen">
                 <p>Concept & Production: Wegee</p>
@@ -126,28 +104,53 @@
                 <p>wegee.eui@gmail.com</p>
                 <br>
                 <p>© 2026. Wegee. All rights reserved.</p>
-                <button class="replay-btn" onclick="replayVideo()">REPLAY</button>
+                <button class="replay-btn" onclick="location.reload()">REPLAY</button>
             </div>
         </div>
     </div>
 
     <script>
-        const video = document.getElementById('main-video');
-        const creditScreen = document.getElementById('credit-screen');
+        const petals = document.querySelectorAll('.petal');
+        const flower = document.getElementById('flower');
+        const credit = document.getElementById('credit-screen');
 
-        // 영상이 끝나면 실행되는 로직
-        video.onended = function() {
-            video.classList.add('hidden'); // 비디오 숨김
-            creditScreen.classList.add('visible'); // 크레딧 표시
-        };
+        // 1. 초기 배치 (각 꽃잎을 72도 간격으로 배치하여 360도 구성)
+        // 요청하신 "120도 각도"는 꽃잎의 벌어짐 정도로 해석하여 배치했습니다.
+        petals.forEach((petal, i) => {
+            gsap.set(petal, { rotation: i * 72 });
+        });
 
-        // 다시 재생 함수
-        function replayVideo() {
-            creditScreen.classList.remove('visible');
-            video.classList.remove('hidden');
-            video.currentTime = 0;
-            video.play();
-        }
+        // 2. 6분 35초(395초) 동안 오른쪽으로 계속 회전
+        const mainRotation = gsap.to(flower, {
+            rotation: 360,
+            duration: 10, // 10초에 한 바퀴
+            repeat: -1,
+            ease: "none"
+        });
+
+        // 3. 395초 시점의 이벤트
+        gsap.delayedCall(395, () => {
+            // 회전은 유지하되 꽃잎이 퍼지는 효과 추가
+            petals.forEach((petal, i) => {
+                gsap.to(petal, {
+                    y: -150, // 밖으로 퍼짐
+                    rotation: "+=120", // 회전되던 각도대로 더 꺾임
+                    opacity: 0, // 사라짐
+                    duration: 5,
+                    ease: "power1.in"
+                });
+            });
+
+            // 5초 후 크레딧 표시
+            gsap.delayedCall(5, () => {
+                flower.style.display = 'none';
+                credit.classList.add('visible');
+            });
+        });
+
+        /* 테스트 팁: 결과를 빨리 보고 싶다면 
+        위의 395 숫자를 5로 바꿔서 5초 후에 퍼지는지 확인해 보세요! 
+        */
     </script>
 </body>
 </html>
