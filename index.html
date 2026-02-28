@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee - Compact Flower Animation</title>
+    <title>Wegee - Almond Petal Animation</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,27 +38,27 @@
             align-items: center;
         }
 
-        /* 꽃잎들이 담길 그룹 - 크기를 기존보다 줄임 */
         .flower-wrapper {
             position: relative;
-            width: 60px; /* 100px -> 60px 축소 */
-            height: 60px;
+            width: 100px;
+            height: 100px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* 🌸 수정된 꽃잎 스타일: 너비 유지, 길이 축소 */
+        /* 🌸 수정된 꽃잎 스타일 */
         .petal {
             position: absolute;
-            width: 30px;  /* 너비 유지 */
-            height: 38px; /* 길이 축소 (55px -> 38px) */
-            /* 아주 어두운 인디고 -> 선명한 파랑 그라디언트 */
-            background: linear-gradient(135deg, #05081A 0%, #1E88E5 100%);
-            border: 2px solid #020410;
-            /* 아몬드 쉐입 유지 */
+            width: 32px;
+            height: 55px;
+            /* 그라디언트: 검정에 가까운 인디고(#0A0E28) -> 선명한 파랑(#2196F3) */
+            background: linear-gradient(135deg, #0A0E28 0%, #2196F3 100%);
+            /* 메이플 2008 감성 테두리 */
+            border: 2px solid #05071A;
+            /* 아몬드 모양: 위아래를 뾰족하게 만드는 90% 곡률 */
             border-radius: 90% 0% 90% 0%;
-            transform: rotate(45deg);
+            transform: rotate(45deg); /* 아몬드 형태를 수직으로 세우기 위한 기본 회전 */
             
             /* 회전축을 꽃잎 하단 꼭짓점으로 설정 */
             transform-origin: bottom left; 
@@ -71,7 +71,7 @@
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             background-color: #ffffff; color: #000; font-size: 9pt; text-align: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.8s ease;
+            opacity: 0; pointer-events: none; transition: opacity 1s ease;
         }
 
         #credit-screen.visible { opacity: 1; pointer-events: auto; }
@@ -94,7 +94,7 @@
             <div class="flower-wrapper" id="flower">
                 <div class="petal"></div>
                 <div class="petal"></div>
-                <div class="petal)</div>
+                <div class="petal"></div>
                 <div class="petal"></div>
                 <div class="petal"></div>
             </div>
@@ -115,36 +115,32 @@
         const flower = document.getElementById('flower');
         const credit = document.getElementById('credit-screen');
 
-        // 1. 초기 배치 (72도 간격 + 기본 45도 회전 보정)
+        // 초기 배치: 아몬드 모양의 기본 회전(45도)을 고려하여 72도 간격 배치
         petals.forEach((petal, i) => {
             gsap.set(petal, { rotation: (i * 72) + 45 });
         });
 
-        // 2. 5초 동안 회전 (테스트용 속도)
+        // 6분 35초(395초) 회전
         const mainRotation = gsap.to(flower, {
             rotation: 360,
-            duration: 8, 
+            duration: 15, // 조금 더 우아하게 천천히 회전
             repeat: -1,
             ease: "none"
         });
 
-        // 3. 5초 시점에 퍼지며 사라짐 (총 6초 구성)
-        gsap.delayedCall(5, () => {
-            mainRotation.kill(); // 회전 멈춤 혹은 가속하며 퍼지기 선택 가능
-
+        // 395초 후 이벤트
+        gsap.delayedCall(395, () => {
             petals.forEach((petal, i) => {
-                const angle = (i * 72) * (Math.PI / 180);
                 gsap.to(petal, {
-                    x: Math.cos(angle) * 120,
-                    y: Math.sin(angle) * 120,
+                    x: Math.cos(i * 72 * Math.PI / 180) * 200,
+                    y: Math.sin(i * 72 * Math.PI / 180) * 200,
                     opacity: 0,
-                    duration: 1, // 1초간 퍼짐
-                    ease: "power2.out"
+                    duration: 5,
+                    ease: "power2.in"
                 });
             });
 
-            // 크레딧 등장
-            gsap.delayedCall(1, () => {
+            gsap.delayedCall(5, () => {
                 flower.style.display = 'none';
                 credit.classList.add('visible');
             });
