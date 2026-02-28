@@ -32,23 +32,24 @@
         .branch {
             position: absolute;
             top: 0;
-            left: 50%;
+            left: 40%;
             width: 6px;
             height: 6%; 
             background: #5D4037; 
             transform: translateX(-50%);
             z-index: 2;
-            border-radius: 0 0 4px 4px
+            border-radius: 4px
         }
 
         /* 2. 나뭇잎: 가지 끝에 수치상 빈틈없이 밀착 */
         .leaf {
             position: absolute;
-            top: 10%; /* branch height와 일치시켜 틈새 제거 */
-            left: 55%;
+            top: 6%; /* branch height와 일치시켜 틈새 제거 */
+            left: 50%;
             width: 40px;
             height: 52px;
             margin-left: -20px;
+            rotation: 60,
             background: radial-gradient(circle at 35% 35%, #D4E157 5%, #8BC34A 50%, #558B2F 95%);
             border: 1px solid #2E7D32; 
             /* 좌우 대칭을 맞추어 중앙선이 정중앙에 오도록 조정 */
@@ -60,13 +61,16 @@
             justify-content: center;
         }
 
-        /* 3. 나뭇잎 중앙 인맥 표현 */
+        /* 3. 나뭇잎 중앙 인맥: 잎의 세로축을 정확히 관통 */
         .leaf::after {
             content: '';
             position: absolute;
-            top: 10%; left: 50%;
-            width: 2px; height: 80%;
-            background: rgba(46, 125, 50, 0.3);
+            top: 0;
+            /* 가로 중앙 정렬 */
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: rgba(46, 125, 50, 0.5); /* 선명도 약간 높임 */
             transform: translateX(-50%);
         }
 
@@ -120,42 +124,42 @@
             </div>
         </div>
     </div>
-<script>
+
+    <script>
         const leaf = document.getElementById('leaf');
         const shadow = document.getElementById('shadow');
         const credit = document.getElementById('credit-screen');
 
         const tl = gsap.timeline();
 
-        // 1. 초기 흔들림 (5초 동안 더 천천히 살랑거림)
+        // 1. 초기 흔들림 (천천히 살랑거림 - 5초)
         tl.to(leaf, {
             rotation: 45,
-            duration: 1.25, // 속도를 0.8에서 1.25로 늦춤
+            duration: 1.25,
             ease: "sine.inOut",
-            repeat: 3, // 약 5초간 진행
+            repeat: 3, 
             yoyo: true
         });
 
-        // 2. 5초 시점에 낙하 시작 (총 6초를 맞추기 위해 낙하 시간을 1초로 조정)
-        gsap.delayedCall(5, () => {
+        // 2. 6.4초 시점에 낙하 시작
+        gsap.delayedCall(6.4, () => {
             tl.kill(); 
 
-            // 하단으로 지그재그 살랑살랑 낙하 (천천히 1초 동안)
+            // 하단으로 지그재그 낙하 (천천히 1초)
             gsap.to(leaf, {
                 y: "750%", 
-                rotation: 110, // 바닥에 더 평평하게 눕도록
+                rotation: 105, 
                 duration: 1, 
                 ease: "power1.out",
                 onUpdate: function() {
-                    // 낙하 시 가로 스윙 폭을 조절하여 살랑거림 표현
-                    gsap.set(leaf, { x: Math.sin(this.progress() * 8) * 35 });
+                    // 가로 흔들림 폭을 살짝 줄여 부드럽게 낙하
+                    gsap.set(leaf, { x: Math.sin(this.progress() * 8) * 30 });
                 },
                 onComplete: () => {
-                    gsap.to(credit, { opacity: 1, duration: 1, pointerEvents: "auto" });
+                    credit.classList.add('visible');
                 }
             });
 
-            // 그림자 애니메이션
             gsap.to(shadow, { scale: 1.2, duration: 1, ease: "power1.out" });
         });
     </script>
