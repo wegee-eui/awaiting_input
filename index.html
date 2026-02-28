@@ -42,19 +42,20 @@
         */
         .content-box {
             width: 22.16%; 
-            min-width: 100px; /* 너무 작아지는 것 방지 */
-            aspect-ratio: 16 / 9; /* 가로형 비율 (애니메이션 비율에 따라 수정 가능) */
+            min-width: 200px; /* 너무 작아지는 것 방지 */
+            aspect-ratio: 4 / 3; /* 가로형 비율 (애니메이션 비율에 따라 수정 가능) */
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
             background-color: rgba(255, 0, 0, 0.2);
+            overflow: hidden;
         }
 
         video {
             width: 100%;
-            height: auto;
-            display: block;
+            height: 100;
+            object-fit: cover;
         }
 
         /* 크레딧 스타일 */
