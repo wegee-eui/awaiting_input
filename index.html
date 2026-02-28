@@ -45,7 +45,7 @@
         .leaf {
            position: absolute;
             top: 8%; /* branch height와 일치시켜 틈새 제거 */
-            left: 58%;
+            left: 56.5%;
             width: 40px;
             height: 52px;
             rotation: 60;
@@ -56,21 +56,6 @@
             box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15);
             transform-origin: top center;
             z-index: 3;
-        }
-
-        /* 3. 나뭇잎 중앙 인맥: 잎의 세로축을 정확히 관통 */
-        .leaf::after {
-            content: '';
-            position: absolute;
-            top: 1;
-            margin-left: -20px;
-            /* 가로 중앙 정렬 */
-            left: 55%;
-            width: 1px;
-            height: 100%;
-            background: rgba(46, 125, 50, 0.5); /* 선명도 약간 높임 */
-            transform: translateX(-50%);
-            rotate: -20deg;
         }
 
         .shadow {
