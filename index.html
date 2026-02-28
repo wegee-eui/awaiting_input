@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee - Flower Petal Animation</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <title>Wegee - Leaf Pixelation Project</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body, html {
             width: 100%; height: 100%;
             background-color: #ffffff;
             overflow: hidden;
             display: flex;
-            font-family: "Malgun Gothic", sans-serif;
+            justify-content: center;
+            align-items: center;
+            font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
         }
-
-        body { justify-content: center; align-items: center; }
 
         .container {
             width: 100%;
@@ -29,55 +28,38 @@
 
         .content-box {
             width: 22.16%; 
-            min-width: 240px;
+            min-width: 200px;
             aspect-ratio: 4 / 3;
             position: relative;
-            background-color: #ffffff;
+            background: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* 꽃잎들이 담길 그룹 */
-        .flower-wrapper {
-            position: relative;
-            width: 100px;
-            height: 100px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated; /* 픽셀 느낌 극대화 */
         }
 
-        /* 개별 꽃잎 스타일 (메이플 2008 감성) */
-        .petal {
-            position: absolute;
-            width: 30px;
-            height: 45px;
-            /* 어두운 인디고 -> 밝은 푸른 파란색 그라디언트 */
-            background: linear-gradient(135deg, #303F9F 0%, #2196F3 100%);
-            /* 메이플 특유의 진한 외곽 테두리 */
-            border: 2px solid #1A237E;
-            border-radius: 50% 50% 10% 10% / 80% 80% 20% 20%;
-            /* 회전축을 꽃잎 하단 중앙으로 설정 */
-            transform-origin: center bottom;
-            /* 꽃잎 사이 3px 간격을 위한 초기 오프셋 (수학적 배치 전) */
-            bottom: 50%;
-        }
-
-        /* 크레딧 스타일 */
         #credit-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background-color: #ffffff; color: #000; font-size: 9pt; text-align: center;
-            opacity: 0; pointer-events: none; transition: opacity 1s ease;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background-color: #ffffff;
+            color: #000; font-size: 9pt; text-align: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 1s ease-in-out;
         }
 
         #credit-screen.visible { opacity: 1; pointer-events: auto; }
 
         .replay-btn {
-            margin-top: 15px; padding: 5px 12px; background: none;
-            border: 1px solid #000; font-size: 8pt; cursor: pointer;
+            margin-top: 15px; padding: 5px 12px;
+            background: none; border: 1px solid #000;
+            font-size: 8pt; cursor: pointer;
         }
 
         @media (max-width: 768px) {
@@ -90,13 +72,7 @@
 
     <div class="container">
         <div class="content-box">
-            <div class="flower-wrapper" id="flower">
-                <div class="petal"></div>
-                <div class="petal"></div>
-                <div class="petal"></div>
-                <div class="petal"></div>
-                <div class="petal"></div>
-            </div>
+            <canvas id="pixel-canvas"></canvas>
 
             <div id="credit-screen">
                 <p>Concept & Production: Wegee</p>
@@ -110,47 +86,85 @@
     </div>
 
     <script>
-        const petals = document.querySelectorAll('.petal');
-        const flower = document.getElementById('flower');
-        const credit = document.getElementById('credit-screen');
+        const canvas = document.getElementById('pixel-canvas');
+        const ctx = canvas.getContext('2d');
+        const creditScreen = document.getElementById('credit-screen');
 
-        // 1. 초기 배치 (각 꽃잎을 72도 간격으로 배치하여 360도 구성)
-        // 요청하신 "120도 각도"는 꽃잎의 벌어짐 정도로 해석하여 배치했습니다.
-        petals.forEach((petal, i) => {
-            gsap.set(petal, { rotation: i * 72 });
-        });
+        const DURATION = 400; // 6분 40초 (초 단위)
+        let startTime = null;
 
-        // 2. 6분 35초(395초) 동안 오른쪽으로 계속 회전
-        const mainRotation = gsap.to(flower, {
-            rotation: 360,
-            duration: 10, // 10초에 한 바퀴
-            repeat: -1,
-            ease: "none"
-        });
+        // 캔버스 크기 설정
+        canvas.width = 400;
+        canvas.height = 300;
 
-        // 3. 395초 시점의 이벤트
-        gsap.delayedCall(395, () => {
-            // 회전은 유지하되 꽃잎이 퍼지는 효과 추가
-            petals.forEach((petal, i) => {
-                gsap.to(petal, {
-                    y: -150, // 밖으로 퍼짐
-                    rotation: "+=120", // 회전되던 각도대로 더 꺾임
-                    opacity: 0, // 사라짐
-                    duration: 5,
-                    ease: "power1.in"
-                });
-            });
+        // 나뭇잎 이미지를 캔버스에 그리는 함수 (사진 스타일 반영)
+        function drawLeaf(context, size) {
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            
+            // 그림자
+            context.fillStyle = 'rgba(0,0,0,0.1)';
+            context.beginPath();
+            context.ellipse(cx, cy + 60, 40, 10, 0, 0, Math.PI * 2);
+            context.fill();
 
-            // 5초 후 크레딧 표시
-            gsap.delayedCall(5, () => {
-                flower.style.display = 'none';
-                credit.classList.add('visible');
-            });
-        });
+            // 나뭇잎 본체 (사진의 연두색 그라데이션 스타일)
+            const grad = context.createRadialGradient(cx, cy, 5, cx, cy, 80);
+            grad.addColorStop(0, '#a8e063');
+            grad.addColorStop(1, '#56ab2f');
+            
+            context.fillStyle = grad;
+            context.beginPath();
+            context.moveTo(cx, cy - 80);
+            context.quadraticCurveTo(cx + 70, cy, cx, cy + 80);
+            context.quadraticCurveTo(cx - 70, cy, cx, cy - 80);
+            context.fill();
 
-        /* 테스트 팁: 결과를 빨리 보고 싶다면 
-        위의 395 숫자를 5로 바꿔서 5초 후에 퍼지는지 확인해 보세요! 
-        */
+            // 잎맥 (중앙 선)
+            context.strokeStyle = 'rgba(255,255,255,0.3)';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(cx, cy - 70);
+            context.lineTo(cx, cy + 70);
+            context.stroke();
+        }
+
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = (timestamp - startTime) / 1000;
+            const progress = Math.min(elapsed / DURATION, 1);
+
+            // 픽셀 크기 계산: 1(원본)에서 시작하여 끝날 때 400(하나의 사각형)으로 증가
+            // 처음에는 변화가 거의 없다가 나중에 급격히 커지도록 제곱근 사용
+            const pixelSize = 1 + Math.pow(progress, 2) * 399;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (progress < 1) {
+                // 1. 임시 캔버스에 원본 나뭇잎 그리기
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = canvas.width;
+                offCanvas.height = canvas.height;
+                const offCtx = offCanvas.getContext('2d');
+                drawLeaf(offCtx);
+
+                // 2. 메인 캔버스에 작게 그렸다가 크게 확대하여 픽셀화 구현
+                const w = canvas.width / pixelSize;
+                const h = canvas.height / pixelSize;
+                
+                ctx.imageSmoothingEnabled = false; // 안티앨리어싱 제거
+                ctx.drawImage(offCanvas, 0, 0, canvas.width, canvas.height, 0, 0, w, h);
+                ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+
+                requestAnimationFrame(animate);
+            } else {
+                // 애니메이션 종료 시 크레딧 표시
+                canvas.style.display = 'none';
+                creditScreen.classList.add('visible');
+            }
+        }
+
+        requestAnimationFrame(animate);
     </script>
 </body>
 </html>
