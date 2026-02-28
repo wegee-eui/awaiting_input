@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee - Almond Petal Animation</title>
+    <title>Wegee - Flower Petal Animation</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,6 +38,7 @@
             align-items: center;
         }
 
+        /* 꽃잎들이 담길 그룹 */
         .flower-wrapper {
             position: relative;
             width: 100px;
@@ -47,25 +48,23 @@
             align-items: center;
         }
 
-        /* 🌸 수정된 꽃잎 스타일 */
+        /* 개별 꽃잎 스타일 (메이플 2008 감성) */
         .petal {
             position: absolute;
-            width: 32px;
-            height: 55px;
-            /* 그라디언트: 검정에 가까운 인디고(#0A0E28) -> 선명한 파랑(#2196F3) */
-            background: linear-gradient(135deg, #0A0E28 0%, #2196F3 100%);
-            /* 메이플 2008 감성 테두리 */
-            border: 2px solid #05071A;
-            /* 아몬드 모양: 위아래를 뾰족하게 만드는 90% 곡률 */
-            border-radius: 90% 0% 90% 0%;
-            transform: rotate(45deg); /* 아몬드 형태를 수직으로 세우기 위한 기본 회전 */
-            
-            /* 회전축을 꽃잎 하단 꼭짓점으로 설정 */
-            transform-origin: bottom left; 
+            width: 30px;
+            height: 45px;
+            /* 어두운 인디고 -> 밝은 푸른 파란색 그라디언트 */
+            background: linear-gradient(135deg, #303F9F 0%, #2196F3 100%);
+            /* 메이플 특유의 진한 외곽 테두리 */
+            border: 2px solid #1A237E;
+            border-radius: 50% 50% 10% 10% / 80% 80% 20% 20%;
+            /* 회전축을 꽃잎 하단 중앙으로 설정 */
+            transform-origin: center bottom;
+            /* 꽃잎 사이 3px 간격을 위한 초기 오프셋 (수학적 배치 전) */
             bottom: 50%;
-            left: 50%;
         }
 
+        /* 크레딧 스타일 */
         #credit-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -115,36 +114,43 @@
         const flower = document.getElementById('flower');
         const credit = document.getElementById('credit-screen');
 
-        // 초기 배치: 아몬드 모양의 기본 회전(45도)을 고려하여 72도 간격 배치
+        // 1. 초기 배치 (각 꽃잎을 72도 간격으로 배치하여 360도 구성)
+        // 요청하신 "120도 각도"는 꽃잎의 벌어짐 정도로 해석하여 배치했습니다.
         petals.forEach((petal, i) => {
-            gsap.set(petal, { rotation: (i * 72) + 45 });
+            gsap.set(petal, { rotation: i * 72 });
         });
 
-        // 6분 35초(395초) 회전
+        // 2. 6분 35초(395초) 동안 오른쪽으로 계속 회전
         const mainRotation = gsap.to(flower, {
             rotation: 360,
-            duration: 15, // 조금 더 우아하게 천천히 회전
+            duration: 10, // 10초에 한 바퀴
             repeat: -1,
             ease: "none"
         });
 
-        // 395초 후 이벤트
+        // 3. 395초 시점의 이벤트
         gsap.delayedCall(395, () => {
+            // 회전은 유지하되 꽃잎이 퍼지는 효과 추가
             petals.forEach((petal, i) => {
                 gsap.to(petal, {
-                    x: Math.cos(i * 72 * Math.PI / 180) * 200,
-                    y: Math.sin(i * 72 * Math.PI / 180) * 200,
-                    opacity: 0,
+                    y: -150, // 밖으로 퍼짐
+                    rotation: "+=120", // 회전되던 각도대로 더 꺾임
+                    opacity: 0, // 사라짐
                     duration: 5,
-                    ease: "power2.in"
+                    ease: "power1.in"
                 });
             });
 
+            // 5초 후 크레딧 표시
             gsap.delayedCall(5, () => {
                 flower.style.display = 'none';
                 credit.classList.add('visible');
             });
         });
+
+        /* 테스트 팁: 결과를 빨리 보고 싶다면 
+        위의 395 숫자를 5로 바꿔서 5초 후에 퍼지는지 확인해 보세요! 
+        */
     </script>
 </body>
 </html>
