@@ -120,50 +120,42 @@
             </div>
         </div>
     </div>
-
-    <script>
+<script>
         const leaf = document.getElementById('leaf');
         const shadow = document.getElementById('shadow');
         const credit = document.getElementById('credit-screen');
 
         const tl = gsap.timeline();
 
-        // 1. 초기 흔들림 (천천히 살랑거림 - 5초)
+        // 1. 초기 흔들림 (5초 동안 더 천천히 살랑거림)
         tl.to(leaf, {
             rotation: 45,
-            duration: 1.25,
+            duration: 1.25, // 속도를 0.8에서 1.25로 늦춤
             ease: "sine.inOut",
-            repeat: 3, 
+            repeat: 3, // 약 5초간 진행
             yoyo: true
         });
 
-        // 2. 6.4초 시점에 낙하 시작
-        gsap.delayedCall(6.4, () => {
+        // 2. 5초 시점에 낙하 시작 (총 6초를 맞추기 위해 낙하 시간을 1초로 조정)
+        gsap.delayedCall(5, () => {
             tl.kill(); 
 
-            // 하단으로 지그재그 낙하 (천천히 1초)
-           gsap.to(leaf, {
-                    y: "820%", // 하단 착지 위치
-                    rotation: 95, // 누운 각도
-                    duration: 4,
-                    ease: "power1.inOut",
-                    onUpdate: function() {
-                        // 떨어지면서 좌우로 흔들리는 물리 효과
-                        gsap.set(leaf, { x: Math.sin(this.progress() * 12) * 40 });
-                    },
-                    onComplete: () => {
-                        credit.classList.add('visible');
-                    }
-                });
-
-                // 그림자 서서히 나타남
-                gsap.to(shadow, {
-                    scale: 1,
-                    duration: 4,
-                    ease: "power1.inOut"
-                });
+            // 하단으로 지그재그 살랑살랑 낙하 (천천히 1초 동안)
+            gsap.to(leaf, {
+                y: "750%", 
+                rotation: 110, // 바닥에 더 평평하게 눕도록
+                duration: 1, 
+                ease: "power1.out",
+                onUpdate: function() {
+                    // 낙하 시 가로 스윙 폭을 조절하여 살랑거림 표현
+                    gsap.set(leaf, { x: Math.sin(this.progress() * 8) * 35 });
+                },
+                onComplete: () => {
+                    gsap.to(credit, { opacity: 1, duration: 1, pointerEvents: "auto" });
+                }
             });
 
+            // 그림자 애니메이션
             gsap.to(shadow, { scale: 1.2, duration: 1, ease: "power1.out" });
         });
     </script>
