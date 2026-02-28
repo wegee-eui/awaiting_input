@@ -3,92 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee | Leaf Vertical Line Fix</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <title>Wegee - Leaf Animation Project</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html {
-            width: 100%; height: 100%;
-            background-color: #ffffff;
-            overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
+        /* 기본 리셋 및 배경 설정 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            overflow: hidden; /* 스크롤 방지 */
+            display: flex;
+            font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Dotum", sans-serif;
+        }
+
+        /* [데스크탑 & 아이패드] 상하좌우 중앙 정렬 */
+        body {
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 전체 컨테이너 */
         .container {
             width: 100%;
             max-width: 1200px;
-            display: flex; justify-content: center; align-items: center;
-        }
-
-        .content-box {
-            width: 22.16%; 
-            min-width: 240px;
-            aspect-ratio: 4 / 3;
-            position: relative;
-            background-color: #ffffff;
-        }
-
-        /* 1. 나뭇가지: 끝부분을 정교하게 마감 */
-        .branch {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 6px;
-            height: 6%; 
-            background: #5D4037; 
-            transform: translateX(-50%);
-            border-radius: 0 0 4px 4px;
-            z-index: 2;
-        }
-
-        /* 2. 나뭇잎: 가지 끝에 수치상 빈틈없이 밀착 */
-        .leaf {
-            position: absolute;
-            top: 6%; /* branch height와 일치시켜 틈새 제거 */
-            left: 50%;
-            width: 40px;
-            height: 52px;
-            margin-left: -20px;
-            background: radial-gradient(circle at 35% 35%, #D4E157 5%, #8BC34A 50%, #558B2F 95%);
-            border: 2px solid #2E7D32; 
-            /* 좌우 대칭을 맞추어 중앙선이 정중앙에 오도록 조정 */
-            border-radius: 4px 90% 4px 90%; 
-            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15);
-            transform-origin: 0px 0px;
-            z-index: 3;
             display: flex;
             justify-content: center;
+            align-items: center;
+            position: relative;
         }
 
-        .shadow {
-            position: absolute;
-            bottom: 5%;
-            left: 50%;
-            width: 40px; height: 10px;
-            background: rgba(0, 0, 0, 0.08);
-            border-radius: 50%;
-            transform: translateX(-50%) scale(0);
-            z-index: 1;
+        /* 애니메이션 박스 
+           데스크탑 1200px 기준 가로 266px (약 22.16%)
+        */
+        .content-box {
+            width: 22.16%; 
+            min-width: 200px;
+            aspect-ratio: 4 / 3; /* 가로가 긴 4:3 비율 */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* 크레딧 스타일 (9pt, 검정색, 고딕체) */
         #credit-screen {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: #fff; font-size: 9pt; text-align: center;
-            opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 10;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #000000;
+            font-size: 9pt;
+            text-align: center;
+            line-height: 1.8;
+            background-color: #ffffff;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease-in-out;
         }
 
-        #credit-screen.visible { opacity: 1; pointer-events: auto; }
+        /* 애니메이션 종료 후 크레딧 활성화 */
+        #credit-screen.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
+        .hidden {
+            display: none !important;
+        }
+
+        /* 재시청 버튼 (원하실 경우 사용) */
         .replay-btn {
-            margin-top: 15px; padding: 5px 12px;
-            background: none; border: 1px solid #000; cursor: pointer;
+            margin-top: 15px;
+            padding: 5px 12px;
+            background: none;
+            border: 1px solid #000;
+            font-size: 8pt;
+            cursor: pointer;
         }
 
+        /* [모바일 반응형] 
+           상, 좌, 우 여백 유지 및 하단이 남는 포맷
+        */
         @media (max-width: 768px) {
-            body { align-items: flex-start; }
-            .container { margin-top: 15vh; }
+            body {
+                align-items: flex-start; /* 상단 정렬 */
+            }
+            .container {
+                margin-top: 15vh; /* 상단 여백 확보 */
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -96,9 +115,10 @@
 
     <div class="container">
         <div class="content-box">
-            <div class="branch"></div>
-            <div class="leaf" id="leaf"></div>
-            <div class="shadow" id="shadow"></div>
+            <video id="main-video" autoplay muted playsinline>
+                <source src="animation.mp4" type="video/mp4">
+                브라우저가 비디오를 지원하지 않습니다.
+            </video>
 
             <div id="credit-screen">
                 <p>Concept & Production: Wegee</p>
@@ -106,48 +126,28 @@
                 <p>wegee.eui@gmail.com</p>
                 <br>
                 <p>© 2026. Wegee. All rights reserved.</p>
-                <button class="replay-btn" onclick="location.reload()">REPLAY</button>
+                <button class="replay-btn" onclick="replayVideo()">REPLAY</button>
             </div>
         </div>
     </div>
 
     <script>
-        const leaf = document.getElementById('leaf');
-        const shadow = document.getElementById('shadow');
-        const credit = document.getElementById('credit-screen');
+        const video = document.getElementById('main-video');
+        const creditScreen = document.getElementById('credit-screen');
 
-        const tl = gsap.timeline();
+        // 영상이 끝나면 실행되는 로직
+        video.onended = function() {
+            video.classList.add('hidden'); // 비디오 숨김
+            creditScreen.classList.add('visible'); // 크레딧 표시
+        };
 
-        // 1. 초기 흔들림 (천천히 살랑거림 - 5초)
-        tl.to(leaf, {
-            rotation: 45,
-            duration: 1.25,
-            ease: "sine.inOut",
-            repeat: 3, 
-            yoyo: true
-        });
-
-        // 2. 5초 시점에 낙하 시작
-        gsap.delayedCall(6.4, () => {
-            tl.kill(); 
-
-            // 하단으로 지그재그 낙하 (천천히 1초)
-            gsap.to(leaf, {
-                y: "750%", 
-                rotation: 105, 
-                duration: 1, 
-                ease: "power1.out",
-                onUpdate: function() {
-                    // 가로 흔들림 폭을 살짝 줄여 부드럽게 낙하
-                    gsap.set(leaf, { x: Math.sin(this.progress() * 8) * 30 });
-                },
-                onComplete: () => {
-                    credit.classList.add('visible');
-                }
-            });
-
-            gsap.to(shadow, { scale: 1.2, duration: 1, ease: "power1.out" });
-        });
+        // 다시 재생 함수
+        function replayVideo() {
+            creditScreen.classList.remove('visible');
+            video.classList.remove('hidden');
+            video.currentTime = 0;
+            video.play();
+        }
     </script>
 </body>
 </html>
