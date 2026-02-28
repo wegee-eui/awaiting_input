@@ -55,9 +55,21 @@
             box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15);
             z-index: 3;
             transform-origin: 0% 0%;
-            rotate: -10deg
+            rotate: -45deg;
             display: flex;
             justify-content: center;
+
+        /* 3. 나뭇잎 중앙 인맥: 잎의 세로축을 정확히 관통 */
+        .leaf::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            /* 가로 중앙 정렬 */
+            left: 50%;
+            width: 1px;
+            height: 100%;
+            background: rgba(46, 125, 50, 0.5); /* 선명도 약간 높임 */
+            transform: translateX(-50%);
         }
 
         .shadow {
