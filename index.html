@@ -38,18 +38,19 @@
             background: #5D4037; 
             transform: translateX(-50%);
             z-index: 2;
+            radius: 4px
         }
 
         /* 2. 나뭇잎: 가지 끝에 수치상 빈틈없이 밀착 */
         .leaf {
             position: absolute;
-            top: 6%; /* branch height와 일치시켜 틈새 제거 */
-            left: 50%;
+            top: 10%; /* branch height와 일치시켜 틈새 제거 */
+            left: 55%;
             width: 40px;
             height: 52px;
             margin-left: -20px;
             background: radial-gradient(circle at 35% 35%, #D4E157 5%, #8BC34A 50%, #558B2F 95%);
-            border: 2px solid #2E7D32; 
+            border: 0.3px solid #2E7D32; 
             /* 좌우 대칭을 맞추어 중앙선이 정중앙에 오도록 조정 */
             border-radius: 4px 90% 4px 90%; 
             box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15);
@@ -65,7 +66,7 @@
             position: absolute;
             top: 0;
             /* 가로 중앙 정렬 */
-            left: 50%;
+            left: 55%;
             width: 2px;
             height: 100%;
             background: rgba(46, 125, 50, 0.5); /* 선명도 약간 높임 */
@@ -139,8 +140,8 @@
             yoyo: true
         });
 
-        // 2. 5초 시점에 낙하 시작
-        gsap.delayedCall(5, () => {
+        // 2. 6.4초 시점에 낙하 시작
+        gsap.delayedCall(6.4, () => {
             tl.kill(); 
 
             // 하단으로 지그재그 낙하 (천천히 1초)
