@@ -36,7 +36,7 @@
             width: 6px;
             height: 6%; 
             background: #5D4037; 
-            border-radius: 0 0 4px 4px
+            border-radius: 0 0 4px 4px;
             transform: translateX(-50%);
             z-index: 2;
         }
@@ -44,20 +44,18 @@
         /* 2. 나뭇잎: 가지 끝에 수치상 빈틈없이 밀착 */
         .leaf {
            position: absolute;
-            top: 6%; /* branch height와 일치시켜 틈새 제거 */
-            left: 50%;
+            top: 8%; /* branch height와 일치시켜 틈새 제거 */
+            left: 60%;
             width: 40px;
             height: 52px;
+            rotation: 60;
             margin-left: -20px;
             background: radial-gradient(circle at 35% 35%, #D4E157 5%, #8BC34A 50%, #558B2F 95%);
             border: 1px solid #2E7D32; 
-            /* 좌우 대칭을 맞추어 중앙선이 정중앙에 오도록 조정 */
             border-radius: 4px 90% 4px 90%; 
             box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15);
             transform-origin: top center;
             z-index: 3;
-            display: flex;
-            justify-content: center;
         }
 
         /* 3. 나뭇잎 중앙 인맥: 잎의 세로축을 정확히 관통 */
