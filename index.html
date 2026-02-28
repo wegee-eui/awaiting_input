@@ -40,7 +40,7 @@
         canvas {
             width: 100%;
             height: 100%;
-            image-rendering: pixelated;
+            image-rendering: pixelated; /* 픽셀 감성 유지 */
         }
 
         #credit-screen {
@@ -51,7 +51,8 @@
             background-color: #ffffff;
             color: #000; font-size: 9pt; text-align: center;
             opacity: 0; pointer-events: none;
-            transition: opacity 1s ease-in-out;
+            transition: opacity 1.5s ease-in-out;
+            z-index: 10;
         }
 
         #credit-screen.visible { opacity: 1; pointer-events: auto; }
@@ -92,8 +93,8 @@
 
         const DURATION = 400; // 6분 40초
         let startTime = null;
-        let lastUpdateTime = -3000; // 즉시 첫 프레임을 그리기 위함
 
+        // 고해상도 드로잉을 위한 설정
         canvas.width = 400;
         canvas.height = 300;
 
@@ -103,31 +104,37 @@
             
             context.save();
             context.translate(cx, cy);
-            context.rotate(Math.PI / 4); // 나뭇잎이 살짝 누워있는 각도 (45도)
+            context.rotate(Math.PI / 3.5); // 약 50도 정도 눕힘
 
-            // 1. 나뭇잎 테두리 (진한 녹색)
-            context.fillStyle = '#2E7D32'; 
-            context.beginPath();
-            context.moveTo(0, -90);
-            context.quadraticCurveTo(80, 0, 0, 90);
-            context.quadraticCurveTo(-80, 0, 0, -90);
+            // 1. 아주 둥글둥글한 나뭇잎 형태 (Radius 최적화)
+            const drawLeafPath = (w, h) => {
+                context.beginPath();
+                context.moveTo(0, -h);
+                // 베지어 곡선으로 더 통통하고 둥근 형태 구현
+                context.bezierCurveTo(w, -h/2, w, h/2, 0, h);
+                context.bezierCurveTo(-w, h/2, -w, -h/2, 0, -h);
+                context.closePath();
+            };
+
+            // 테두리
+            context.fillStyle = '#1B5E20'; 
+            drawLeafPath(85, 95);
             context.fill();
 
-            // 2. 나뭇잎 내부 (그라디언트)
-            const leafGrad = context.createRadialGradient(-10, -10, 5, 0, 0, 100);
-            leafGrad.addColorStop(0, '#D4E157'); // 밝은 연두
-            leafGrad.addColorStop(1, '#689F38'); // 짙은 녹색
+            // 내부 그라디언트 (보내주신 사진 스타일)
+            const leafGrad = context.createRadialGradient(-20, -30, 10, 0, 0, 120);
+            leafGrad.addColorStop(0, '#C0CA33'); // 밝은 영역
+            leafGrad.addColorStop(0.6, '#689F38'); // 중간 영역
+            leafGrad.addColorStop(1, '#1B5E20'); // 진한 영역
             
             context.fillStyle = leafGrad;
-            context.beginPath();
-            context.moveTo(0, -86);
-            context.quadraticCurveTo(76, 0, 0, 86);
-            context.quadraticCurveTo(-76, 0, 0, -86);
+            drawLeafPath(80, 90);
             context.fill();
 
-            // 3. 중앙 잎맥
-            context.strokeStyle = 'rgba(46, 125, 50, 0.5)';
-            context.lineWidth = 3;
+            // 중앙 잎맥 (입체감)
+            context.strokeStyle = 'rgba(27, 94, 32, 0.4)';
+            context.lineWidth = 4;
+            context.lineCap = 'round';
             context.beginPath();
             context.moveTo(0, -80);
             context.lineTo(0, 80);
@@ -141,35 +148,36 @@
             const elapsed = (timestamp - startTime) / 1000;
             const progress = Math.min(elapsed / DURATION, 1);
 
-            // 💡 3초마다만 업데이트 (3000ms)
-            if (timestamp - lastUpdateTime >= 3000 || progress >= 1) {
-                lastUpdateTime = timestamp;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 1. 오프스크린 캔버스에 나뭇잎 그리기
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = canvas.width;
+            offCanvas.height = canvas.height;
+            const offCtx = offCanvas.getContext('2d');
+            drawLeaf(offCtx);
 
-                if (progress < 1) {
-                    const offCanvas = document.createElement('canvas');
-                    offCanvas.width = canvas.width;
-                    offCanvas.height = canvas.height;
-                    const offCtx = offCanvas.getContext('2d');
-                    drawLeaf(offCtx);
+            // 2. 픽셀 사이즈 계산 (실시간 반영)
+            // progress가 1에 가까워질수록 pixelSize가 400까지 증가
+            const pixelSize = 1 + (Math.pow(progress, 2.5) * 399);
+            
+            const w = Math.max(1, canvas.width / pixelSize);
+            const h = Math.max(1, canvas.height / pixelSize);
+            
+            ctx.imageSmoothingEnabled = false;
+            
+            // 작게 그렸다가 다시 확대하여 픽셀화 (실시간)
+            ctx.drawImage(offCanvas, 0, 0, canvas.width, canvas.height, 0, 0, w, h);
+            ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
 
-                    // 픽셀 사이즈 결정 (점점 커짐)
-                    const pixelSize = 1 + (Math.pow(progress, 1.5) * 399);
-                    
-                    const w = Math.max(1, canvas.width / pixelSize);
-                    const h = Math.max(1, canvas.height / pixelSize);
-                    
-                    ctx.imageSmoothingEnabled = false;
-                    ctx.drawImage(offCanvas, 0, 0, canvas.width, canvas.height, 0, 0, w, h);
-                    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
-                } else {
-                    canvas.style.display = 'none';
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // 엔딩: 픽셀이 하나가 되었을 때 서서히 크레딧 표시
+                setTimeout(() => {
                     creditScreen.classList.add('visible');
-                    return;
-                }
+                }, 500);
             }
-            requestAnimationFrame(animate);
         }
 
         requestAnimationFrame(animate);
