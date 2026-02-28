@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wegee | Maple Leaf 6s Final Test</title>
+    <title>Wegee | Leaf Vertical Line Fix</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,10 +26,9 @@
             aspect-ratio: 4 / 3;
             position: relative;
             background-color: #ffffff;
-            overflow: hidden;
         }
 
-        /* 1. 나뭇가지: 위치를 고정하고 잎이 그 위에 덮이도록 설정 */
+        /* 1. 나뭇가지: 끝부분을 정교하게 마감 */
         .branch {
             position: absolute;
             top: 0;
@@ -38,35 +37,38 @@
             height: 6%; 
             background: #5D4037; 
             transform: translateX(-50%);
-            border-radius: 0 0 2px 2px;
             z-index: 2;
         }
 
-        /* 2. 나뭇잎: 가지 끝에 완전히 밀착 */
+        /* 2. 나뭇잎: 가지 끝에 수치상 빈틈없이 밀착 */
         .leaf {
             position: absolute;
-            top: 6%; /* 가지의 height와 동일하게 맞춤 (틈새 제거) */
+            top: 6%; /* branch height와 일치시켜 틈새 제거 */
             left: 50%;
             width: 40px;
             height: 52px;
-            margin-left: -20px; /* 가로 중앙 정렬 */
+            margin-left: -20px;
             background: radial-gradient(circle at 35% 35%, #D4E157 5%, #8BC34A 50%, #558B2F 95%);
             border: 2px solid #2E7D32; 
-            border-radius: 2px 90% 2px 90%; /* 메이플 특유의 뾰족한 잎 형태 */
+            /* 좌우 대칭을 맞추어 중앙선이 정중앙에 오도록 조정 */
+            border-radius: 4px 90% 4px 90%; 
             box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15);
-            transform-origin: top center; /* 가지 끝을 기준으로 회전 */
+            transform-origin: top center;
             z-index: 3;
+            display: flex;
+            justify-content: center;
         }
 
-        /* 3. 나뭇잎 중앙 인맥: 잎 전체를 정석으로 가로지름 */
+        /* 3. 나뭇잎 중앙 인맥: 잎의 세로축을 정확히 관통 */
         .leaf::after {
             content: '';
             position: absolute;
-            top: 0; 
+            top: 0;
+            /* 가로 중앙 정렬 */
             left: 50%;
-            width: 2px; 
-            height: 100%; /* 잎 전체 길이만큼 */
-            background: rgba(46, 125, 50, 0.4);
+            width: 2px;
+            height: 100%;
+            background: rgba(46, 125, 50, 0.5); /* 선명도 약간 높임 */
             transform: translateX(-50%);
         }
 
@@ -128,35 +130,34 @@
 
         const tl = gsap.timeline();
 
-        // 1. 초기 흔들림 (5초 동안 더 천천히 살랑거림)
+        // 1. 초기 흔들림 (천천히 살랑거림 - 5초)
         tl.to(leaf, {
             rotation: 45,
-            duration: 1.25, // 속도를 0.8에서 1.25로 늦춤
+            duration: 1.25,
             ease: "sine.inOut",
-            repeat: 3, // 약 5초간 진행
+            repeat: 3, 
             yoyo: true
         });
 
-        // 2. 5초 시점에 낙하 시작 (총 6초를 맞추기 위해 낙하 시간을 1초로 조정)
+        // 2. 5초 시점에 낙하 시작
         gsap.delayedCall(5, () => {
             tl.kill(); 
 
-            // 하단으로 지그재그 살랑살랑 낙하 (천천히 1초 동안)
+            // 하단으로 지그재그 낙하 (천천히 1초)
             gsap.to(leaf, {
                 y: "750%", 
-                rotation: 110, // 바닥에 더 평평하게 눕도록
+                rotation: 105, 
                 duration: 1, 
                 ease: "power1.out",
                 onUpdate: function() {
-                    // 낙하 시 가로 스윙 폭을 조절하여 살랑거림 표현
-                    gsap.set(leaf, { x: Math.sin(this.progress() * 8) * 35 });
+                    // 가로 흔들림 폭을 살짝 줄여 부드럽게 낙하
+                    gsap.set(leaf, { x: Math.sin(this.progress() * 8) * 30 });
                 },
                 onComplete: () => {
-                    gsap.to(credit, { opacity: 1, duration: 1, pointerEvents: "auto" });
+                    credit.classList.add('visible');
                 }
             });
 
-            // 그림자 애니메이션
             gsap.to(shadow, { scale: 1.2, duration: 1, ease: "power1.out" });
         });
     </script>
