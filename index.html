@@ -59,7 +59,8 @@
             display: flex;
             justify-content: center;
         }
-/* 3. 나뭇잎 중앙 인맥: 잎의 세로축 관통 */
+        
+        /* 3. 나뭇잎 중앙 인맥: 잎의 세로축 관통 */
         .leaf::after {
             content: '';
             position: absolute;
@@ -85,7 +86,7 @@
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             background: #fff; font-size: 9pt; text-align: center;
-            opacity: 0; pointer-events: none; transition: opacity 1.5s ease; z-index: 10;
+            opacity: 0; pointer-events: none; transition: opacity 1s; z-index: 10;
         }
 
         #credit-screen.visible { opacity: 1; pointer-events: auto; }
@@ -93,7 +94,6 @@
         .replay-btn {
             margin-top: 15px; padding: 5px 12px;
             background: none; border: 1px solid #000; cursor: pointer;
-            font-size: 8pt;
         }
 
         @media (max-width: 768px) {
