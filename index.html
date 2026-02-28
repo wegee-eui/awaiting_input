@@ -45,7 +45,7 @@
         .leaf {
            position: absolute;
             top: 8%; /* branch height와 일치시켜 틈새 제거 */
-            left: 55%;
+            left: 58%;
             width: 40px;
             height: 52px;
             rotation: 60;
@@ -62,11 +62,12 @@
         .leaf::after {
             content: '';
             position: absolute;
-            top: 0;
+            top: 1;
             margin-left: -20px;
+            marin-right: 20px;
             /* 가로 중앙 정렬 */
             left: 50%;
-            width: 2px;
+            width: 1px;
             height: 100%;
             background: rgba(46, 125, 50, 0.5); /* 선명도 약간 높임 */
             transform: translateX(-50%);
