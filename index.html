@@ -41,8 +41,8 @@
         /* 꽃잎들이 담길 그룹 */
         .flower-wrapper {
             position: relative;
-            width: 100px;
-            height: 100px;
+            width: 110px;
+            height: 110px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -130,7 +130,7 @@
         });
 
         // 3. 395초 시점의 이벤트
-        gsap.delayedCall(6.4, () => {
+        gsap.delayedCall(400, () => {
             mainRotation.kill(); // 회전 멈춤 혹은 가속하며 퍼지기 선택 가능
 
             petals.forEach((petal, i) => {
