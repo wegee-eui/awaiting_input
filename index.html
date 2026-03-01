@@ -2,129 +2,81 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>400 Seconds of Gaze - Refined</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>400 Seconds Gaze Project</title>
     <style>
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: black;
-            font-family: 'Pretendard', 'Nanum Gothic', sans-serif;
-            transition: background-color 0.5s;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden; background-color: black;
+            font-family: 'Pretendard', sans-serif;
         }
 
         #container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            position: relative;
+            display: flex; justify-content: center; align-items: center;
+            width: 100%; height: 100%; position: relative;
         }
 
-        /* 눈 컨테이너: 가로 80% */
+        /* 1. 눈 모양 수정 포인트 */
         .eyes-wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 80%;
-            max-width: 1400px;
-            /* 모바일에서 눈 사이 간격 조정 */
-            gap: 10%;
+            display: flex; justify-content: space-between;
+            width: 80%; max-width: 1400px; gap: 10%;
         }
 
         .eye {
-            background-color: white;
-            flex: 1; /* 눈 크기가 비율대로 커지게 */
-            aspect-ratio: 1.8 / 1; /* 사진을 참고한 약간 더 넓은 눈 비율 */
-            
-            /* 사진의 아몬드형 눈 모양 구현 (Border-radius 값 조정) */
-            border-radius: 60% 60% 40% 40% / 100% 100% 70% 70%;
-            
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: white; flex: 1; aspect-ratio: 1.8 / 1;
+            /* 질문하신 타원형 곡률: 직접 이 수치를 조절해보세요! */
+            border-radius: 80% 50% 80% 50% / 80% 50% 80% 50%;
+            position: relative; display: flex; justify-content: center; align-items: center;
             overflow: hidden;
         }
 
+        .eye:last-child {
+            transform: scaleX(-1);
+         }
+        
+        .eye:last-child .pupil {
+            transform: scaleX(-1);
+         }
+        
         .pupil {
-            background-color: black;
-            /* 사진을 참고하여 눈동자 비율을 조금 더 크게 (기존 30% -> 38%) */
-            width: 38%; 
-            aspect-ratio: 1 / 1;
-            border-radius: 50%;
-            position: absolute;
-            transition: transform 0.1s ease-out; /* 눈동자 움직임을 부드럽게 */
+            background-color: black; width: 38%; aspect-ratio: 1 / 1;
+            border-radius: 50%; position: absolute;
+            transition: transform 0.1s ease-out;
         }
 
-        /* 상태 메시지: 카운트업 전용 */
+        /* 2. 대기 문구 (카운트업) */
         #status-msg {
-            display: none;
-            color: white;
-            font-size: 5vw;
-            font-weight: bold;
-            text-align: center;
-            width: 80%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            display: none; color: white; font-size: 5vw; font-weight: bold;
+            text-align: center; width: 80%; position: absolute;
         }
 
-        /* 결과 화면: SVG 사용 (벡터 기반으로 깨지지 않음) */
+        /* 3. 드로잉 결과물 (비율 유지 확대/축소 핵심) */
         #svgPathContainer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            z-index: 1;
+            position: absolute; top: 0; left: 0;
+            width: 100vw; height: 100vh; /* 화면 전체 차지 */
+            display: none; background-color: white; z-index: 1;
         }
+
         #pathSvg {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
+            /* xMidYMid meet: 가로세로 비율을 유지하면서 화면에 꽉 맞게 확대/축소 */
+            display: block;
         }
 
-        /* 종료 UI (SVG 위에 뜨게) */
+        /* 종료 UI */
         #ui-overlay {
-            display: none;
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            z-index: 10;
+            display: none; position: absolute; bottom: 8%;
+            left: 50%; transform: translateX(-50%);
+            text-align: center; z-index: 10;
         }
 
-        .credits {
-            margin-bottom: 25px;
-            line-height: 1.6;
-            color: black;
-            font-size: 14px;
-        }
-
-        .credits a {
-            color: black;
-            text-decoration: underline;
-        }
+        .credits { margin-bottom: 20px; color: black; font-size: 14px; line-height: 1.6; }
+        .credits a { color: black; text-decoration: underline; }
 
         #download-btn {
-            padding: 14px 28px;
-            background: black;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        #download-btn:hover {
-            background: #333;
+            padding: 12px 24px; background: black; color: white;
+            border: none; cursor: pointer; font-weight: bold;
         }
     </style>
 </head>
@@ -138,273 +90,141 @@
     <div id="status-msg">Waiting for <span id="out-timer">0</span> seconds</div>
     
     <div id="svgPathContainer">
-        <svg id="pathSvg" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <polyline id="pathPolyline" points="" fill="none" stroke="black" stroke-width="0.2" />
+        <svg id="pathSvg" preserveAspectRatio="xMidYMid meet">
+            <polyline id="pathPolyline" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
     </div>
 </div>
 
 <div id="ui-overlay">
     <div class="credits">
-        You waited for 400 seconds.<br>
-        Concept & Production: <a href="https://www.instagram.com/wegee.eui/" target="_blank">@wegee.eui</a>
+        You waited 400 seconds.<br>
+        Concept & Production: <a href="https://www.instagram.com/wegee.eui/" target="_blank">Wegee @wegee.eui</a>
     </div>
-    <button id="download-btn">Save Your Waiting Path (High-Res)</button>
+    <button id="download-btn">이미지 저장하기</button>
 </div>
 
 <script>
-    // --- 설정 변수 ---
-    const TARGET_SECONDS = 15; // 목표 시간
-    const MSG_DELAY_MS = 1000;   // "Waiting..." 문구 뜨는 지연 시간 (1초)
+    // --- [수정 포인트 1: 시간 설정] ---
+    const TARGET_SECONDS = 400; // 목표 체류 시간
+    const MSG_DELAY_MS = 200;    // 스크린 벗어난 후 문구 뜨는 지연 시간 (0.2초)
 
-    // --- DOM 요소 ---
-    const eyesContainer = document.getElementById('eyes-container');
-    const pupils = document.querySelectorAll('.pupil');
-    const statusMsg = document.getElementById('status-msg');
-    const outTimerSpan = document.getElementById('out-timer');
-    
-    const svgContainer = document.getElementById('svgPathContainer');
-    const pathSvg = document.getElementById('pathSvg');
-    const pathPolyline = document.getElementById('pathPolyline');
-
-    const uiOverlay = document.getElementById('ui-overlay');
-    const downloadBtn = document.getElementById('download-btn');
-
-    // --- 상태 변수 ---
-    let totalStayedTimeMs = 0;   // 전체 체류 시간 (카운트다운용)
-    let totalOutTimeMs = 0;      // 스크린 벗어난 시간 (카운트업용)
+    let totalOutTimeMs = 0;
+    let outStartTime = null;
     let stayStartTime = Date.now();
-    let outStartTime = null;     // 스크린 벗어난 시점 기록
-
     let path = [];
     let isFinished = false;
-    let isTabActive = true;      // 탭 포커스 상태
-    let isMouseInScreen = true;  // 마우스의 스크린 내 존재 상태
+    let msgTimeout = null;
 
-    let msgDelayTimeout = null;  // 문구 지연 표시용 타이머
-
-    // --- 초기화 ---
-    function init() {
-        // SVG viewBox 초기 설정 (현재 창 크기 기준)
-        updateSvgViewBox();
-        window.addEventListener('resize', () => {
-            if (!isFinished) {
-                updateSvgViewBox();
-            } else {
-                // 종료 화면일 때 창 크기를 바꿔도 SVG 비율이 유지되도록 preserveAspectRatio 사용
-            }
-        });
-    }
-
-    // 창 크기에 맞춰 SVG viewBox 업데이트
-    function updateSvgViewBox() {
-        pathSvg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
-    }
-
-    // --- 마우스 움직임 기록 및 눈동자 제어 ---
+    // 마우스 추적 및 눈동자
     window.addEventListener('mousemove', (e) => {
         if (isFinished) return;
+        path.push({ x: e.clientX, y: e.clientY });
 
-        // 마우스 경로 기록 (스크린 안에 있을 때만)
-        if (isMouseInScreen) {
-            path.push({ x: e.clientX, y: e.clientY });
-        }
-
-        // 눈동자 움직임
+        const pupils = document.querySelectorAll('.pupil');
         pupils.forEach(pupil => {
             const rect = pupil.parentElement.getBoundingClientRect();
             const eyeX = rect.left + rect.width / 2;
             const eyeY = rect.top + rect.height / 2;
-            
-            // 마우스와의 거리 및 각도 계산
-            const dx = e.clientX - eyeX;
-            const dy = e.clientY - eyeY;
-            const angle = Math.atan2(dy, dx);
-            
-            // 흰자 경계를 넘지 않도록 거리 제한 (사진 기준 좁은 흰자)
-            const maxDistance = rect.width / 5; // 거리를 좁혀서 더 리얼하게
-            const distance = Math.min(maxDistance, Math.hypot(dx, dy) / 15);
-            
-            const moveX = Math.cos(angle) * distance;
-            const moveY = Math.sin(angle) * distance;
-            
-            pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
+            const dist = Math.min(rect.width / 6, Math.hypot(e.clientX - eyeX, e.clientY - eyeY) / 15);
+            pupil.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
         });
     });
 
-    // --- 시선/존재 동기화 로직 (핵심 수정 부분) ---
-
-    // 사용자가 스크린을 벗어났을 때 (Blur 또는 MouseLeave)
-    function handleUserLeft() {
+    // --- [수정 포인트 2: 시선 동기화 및 0.2초 지연] ---
+    function userLeft() {
         if (isFinished) return;
-        
-        // 스크린 벗어난 시간 기록 시작
-        if (outStartTime === null) {
-            outStartTime = Date.now();
-        }
-
-        // 1초 뒤에 "Waiting..." 문구를 띄움
-        if (msgDelayTimeout === null) {
-            msgDelayTimeout = setTimeout(() => {
-                eyesContainer.style.display = 'none';
-                statusMsg.style.display = 'block';
-            }, MSG_DELAY_MS);
-        }
+        if (!outStartTime) outStartTime = Date.now();
+        msgTimeout = setTimeout(() => {
+            document.getElementById('eyes-container').style.display = 'none';
+            document.getElementById('status-msg').style.display = 'block';
+        }, MSG_DELAY_MS);
     }
 
-    // 사용자가 스크린으로 돌아왔을 때 (Focus 또는 MouseEnter)
-    function handleUserReturned() {
+    function userReturned() {
         if (isFinished) return;
-
-        // 스크린 벗어났던 시간 누적 계산
-        if (outStartTime !== null) {
+        if (outStartTime) {
             totalOutTimeMs += Date.now() - outStartTime;
-            outStartTime = null; // 초기화
+            outStartTime = null;
         }
-
-        // 대기 중인 문구 표시 타이머 취소
-        if (msgDelayTimeout) {
-            clearTimeout(msgDelayTimeout);
-            msgDelayTimeout = null;
-        }
-
-        // 눈 다시 표시, 문구 숨김
-        eyesContainer.style.display = 'flex';
-        statusMsg.style.display = 'none';
+        clearTimeout(msgTimeout);
+        document.getElementById('eyes-container').style.display = 'flex';
+        document.getElementById('status-msg').style.display = 'none';
     }
 
-    // 브라우저 탭 포커스 감지
-    window.addEventListener('blur', () => { isTabActive = false; handleUserLeft(); });
-    window.addEventListener('focus', () => { isTabActive = true; 
-        if (isMouseInScreen) handleUserReturned(); // 마우스도 안에 있어야 돌아온 것
-    });
+    window.addEventListener('blur', userLeft);
+    window.addEventListener('focus', userReturned);
+    document.addEventListener('mouseleave', userLeft);
+    document.addEventListener('mouseenter', userReturned);
 
-    // 마우스의 스크린 진출입 감지
-    document.addEventListener('mouseleave', () => { isMouseInScreen = false; handleUserLeft(); });
-    document.addEventListener('mouseenter', () => { isMouseInScreen = true;
-        if (isTabActive) handleUserReturned(); // 탭도 활성화되어야 돌아온 것
-    });
-
-    // --- 루프 타이머 (체류 시간 및 벗어난 시간 계산) ---
-    const gameLoop = setInterval(() => {
+    // 메인 루프
+    setInterval(() => {
         if (isFinished) return;
 
-        let currentOutSeconds = 0;
+        // 카운트업 (스크린 밖 대기 시간)
+        let currentOut = totalOutTimeMs;
+        if (outStartTime) currentOut += Date.now() - outStartTime;
+        document.getElementById('out-timer').textContent = Math.floor(currentOut / 1000);
 
-        // 1. 스크린 벗어난 시간 카운트업 (현재 벗어나 있는 상태라면)
-        if (!isTabActive || !isMouseInScreen) {
-            if (outStartTime !== null) {
-                const sessionOutTime = Date.now() - outStartTime;
-                currentOutSeconds = Math.floor((totalOutTimeMs + sessionOutTime) / 1000);
-            }
-        } else {
-            // 스크린 안에 있을 때의 누적 시간
-            currentOutSeconds = Math.floor(totalOutTimeMs / 1000);
+        // 실제 체류 시간 체크 (목표 달성)
+        if (Date.now() - stayStartTime - totalOutTimeMs >= TARGET_SECONDS * 1000) {
+            finish();
         }
-        
-        // 화면의 카운트업 텍스트 업데이트
-        outTimerSpan.textContent = currentOutSeconds;
+    }, 100);
 
-
-        // 2. 전체 체류 시간 카운트다운 (기존 로직 유지, 스크린 안에 있을 때만 감소)
-        if (isTabActive && isMouseInScreen) {
-            // 이 로직은 사용자의 총 머문 시간을 계산합니다. (요청에 명시되지 않았지만 목표 달성을 위해 유지)
-            // 실제 서비스 시 카운트다운을 보여주거나 내부적으로 처리
-            const totalStayed = Date.now() - stayStartTime;
-            if (totalStayed >= TARGET_SECONDS * 1000) {
-                finishGame();
-            }
-        } else {
-            // 스크린 밖에 있는 시간만큼 시작 시간을 뒤로 미뤄서 
-            // '실제 안에 머문 시간'만 계산되도록 함
-            stayStartTime += 1000; 
-        }
-
-    }, 1000);
-
-    // --- 목표 달성 시 종료 처리 (SVG 방식 사용) ---
-    function finishGame() {
+    // --- [수정 포인트 3: 비율 유지 드로잉 종료 화면] ---
+    function finish() {
         isFinished = true;
-        clearInterval(gameLoop);
-        if (msgDelayTimeout) clearTimeout(msgDelayTimeout);
-        
         document.body.style.backgroundColor = 'white';
-        eyesContainer.style.display = 'none';
-        statusMsg.style.display = 'none';
+        document.getElementById('eyes-container').style.display = 'none';
+        document.getElementById('status-msg').style.display = 'none';
         
-        // SVG 결과 화면 표시 및 그리기
-        svgContainer.style.display = 'block';
-        drawPathSvg();
-        uiOverlay.style.display = 'block';
+        const svgCont = document.getElementById('svgPathContainer');
+        const svg = document.getElementById('pathSvg');
+        const poly = document.getElementById('pathPolyline');
+        
+        svgCont.style.display = 'block';
+
+        // 경로 좌표의 경계 계산 (가장 작은/큰 X, Y)
+        const xs = path.map(p => p.x);
+        const ys = path.map(p => p.y);
+        const minX = Math.min(...xs) - 50;
+        const minY = Math.min(...ys) - 50;
+        const width = Math.max(...xs) - minX + 50;
+        const height = Math.max(...ys) - minY + 50;
+
+        // SVG의 viewBox를 드로잉 영역에 맞춤 (이게 있어야 창 크기 조절 시 비율 유지)
+        svg.setAttribute('viewBox', `${minX} ${minY} ${width} ${height}`);
+        poly.setAttribute('points', path.map(p => `${p.x},${p.y}`).join(' '));
+        
+        document.getElementById('ui-overlay').style.display = 'block';
     }
 
-    // 마우스 경로를 SVG 벡터로 그리기
-    function drawPathSvg() {
-        // 창 크기를 줄였을 때 드로잉이 잘리지 않도록 viewBox를 실제 드로잉 범위에 맞춤
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        path.forEach(p => {
-            minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
-            maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
-        });
-
-        // 여백 추가
-        const padding = 50;
-        minX -= padding; minY -= padding;
-        maxX += padding; maxY += padding;
-        
-        // 드로잉이 있는 실제 영역으로 viewBox 업데이트 (창 크기 변경 대응)
-        pathSvg.setAttribute('viewBox', `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
-
-        // 폴리라인 포인트 생성
-        const pointsString = path.map(p => `${p.x},${p.y}`).join(' ');
-        pathPolyline.setAttribute('points', pointsString);
-        
-        // 드로잉 범위가 넓어지면 선 굵기도 상대적으로 조정
-        const svgWidth = maxX - minX;
-        pathPolyline.setAttribute('stroke-width', Math.max(0.5, svgWidth / 500)); 
-    }
-
-    // --- 고해상도 이미지 저장 (SVG to PNG) ---
-    downloadBtn.addEventListener('click', () => {
-        // 1. 현재 SVG 내용을 문자열로 가져옴
-        const svgData = new XMLSerializer().serializeToString(pathSvg);
-        
-        // 2. 고해상도 저장을 위해 캔버스 크기를 크게 잡음 (기존 창 크기의 4배)
-        const exportScale = 4; 
+    // 이미지 저장
+    document.getElementById('download-btn').addEventListener('click', () => {
+        const svg = document.getElementById('pathSvg');
+        const svgData = new XMLSerializer().serializeToString(svg);
         const canvas = document.createElement('canvas');
-        const viewBox = pathSvg.viewBox.baseVal;
-        canvas.width = viewBox.width * exportScale;
-        canvas.height = viewBox.height * exportScale;
+        const viewBox = svg.viewBox.baseVal;
+        
+        // 고해상도 (3배)
+        canvas.width = viewBox.width * 3;
+        canvas.height = viewBox.height * 3;
         const ctx = canvas.getContext('2d');
-        
-        // 3. SVG 데이타를 Blob으로 만들고 Image 객체에 로드
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-        const URL = window.URL || window.webkitURL || window;
-        const blobURL = URL.createObjectURL(svgBlob);
-        
         const img = new Image();
+        
         img.onload = () => {
-            // 캔버스에 흰색 배경 칠하기
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // 고해상도로 드로잉 그리기
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            // 4. PNG로 다운로드
             const link = document.createElement('a');
-            link.download = `My-Waiting-Path-${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png', 1.0); // 최고 품질
+            link.download = 'my-gaze-path.png';
+            link.href = canvas.toDataURL();
             link.click();
-            
-            // 메모리 해제
-            URL.revokeObjectURL(blobURL);
         };
-        img.src = blobURL;
+        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     });
-
-    init();
 </script>
-
 </body>
 </html>
