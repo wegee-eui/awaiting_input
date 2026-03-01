@@ -3,153 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>400s Convergence - Wegee</title>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+    <title>400 Seconds of Gaze</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html {
-            width: 100%; height: 100%;
-            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
-            font-family: sans-serif;
+            background-color: black;
+            font-family: 'Pretendard', 'Nanum Gothic', sans-serif;
+            transition: background-color 0.5s;
         }
-        .container { width: 100%; display: flex; justify-content: center; align-items: center; }
-        .content-box {
-            width: 50vw; height: 37.5vw;
-            min-width: 300px; min-height: 225px;
+
+        #container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
             position: relative;
-            background-color: #fff;
-            border: 1px solid #000;
         }
-        #canvas-container { width: 100%; height: 100%; }
-        #credit-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: #000; font-size: 9pt; text-align: center; line-height: 1.8;
-            background-color: rgba(255, 255, 255, 0.95);
-            opacity: 0; pointer-events: none;
-            transition: opacity 1.5s; z-index: 10;
+
+        /* 눈 컨테이너: 가로 80% */
+        .eyes-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 80%;
+            max-width: 1200px;
         }
-        #credit-screen.visible { opacity: 1; pointer-events: auto; }
-        .replay-btn { margin-top: 15px; padding: 5px 12px; border: 1px solid #000; background: none; cursor: pointer; }
+
+        .eye {
+            background-color: white;
+            width: 45%;
+            aspect-ratio: 2 / 1;
+            border-radius: 50% 50%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .pupil {
+            background-color: black;
+            width: 30%;
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        /* 상태 메시지 */
+        #status-msg {
+            display: none;
+            color: white;
+            font-size: 5vw;
+            font-weight: bold;
+            text-align: center;
+            width: 80%;
+        }
+
+        /* 결과 캔버스 */
+        #pathCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            background-color: white;
+        }
+
+        /* 종료 UI */
+        #ui-overlay {
+            display: none;
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .credits {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: black;
+        }
+
+        .credits a {
+            color: black;
+            text-decoration: underline;
+        }
+
+        #download-btn {
+            padding: 12px 24px;
+            background: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="content-box" id="parent-box">
-            <div id="canvas-container"></div>
-            <div id="credit-screen">
-                <p><strong>The Will of Machine: Order from Chaos</strong></p>
-                <p>Concept & Production: Wegee</p>
-                <p>© 2026. Wegee.</p>
-                <button class="replay-btn" onclick="resetSketch()">REPLAY</button>
-            </div>
-        </div>
+
+<div id="container">
+    <div class="eyes-wrapper" id="eyes-container">
+        <div class="eye"><div class="pupil"></div></div>
+        <div class="eye"><div class="pupil"></div></div>
     </div>
+    <div id="status-msg">Waiting for <span id="timer">15</span> seconds</div>
+    <canvas id="pathCanvas"></canvas>
+</div>
 
-    <script>
-        let particles = [];
-        let startTime;
-        const totalDuration = 10 * 1000; // 400초
-        let isEnded = false;
-        let cols = 20; // 가로 픽셀 수
-        let rows = 15; // 세로 픽셀 수
+<div id="ui-overlay">
+    <div class="credits">
+        You waited 400 seconds.<br>
+        Concept & Production: <a href="https://www.instagram.com/wegee.eui/" target="_blank">Wegee @wegee.eui</a>
+    </div>
+    <button id="download-btn">Save Gaze Path</button>
+</div>
 
-        function setup() {
-            let container = document.getElementById('canvas-container');
-            let canvas = createCanvas(container.offsetWidth, container.offsetHeight);
-            canvas.parent('canvas-container');
-            startTime = millis();
-            initParticles();
+<script>
+    const eyesContainer = document.getElementById('eyes-container');
+    const pupils = document.querySelectorAll('.pupil');
+    const statusMsg = document.getElementById('status-msg');
+    const timerSpan = document.getElementById('timer');
+    const canvas = document.getElementById('pathCanvas');
+    const ctx = canvas.getContext('2d');
+    const uiOverlay = document.getElementById('ui-overlay');
+    const downloadBtn = document.getElementById('download-btn');
+
+    let startTime = Date.now();
+    let timeLeft = 15;
+    let path = [];
+    let isFinished = false;
+    let isTabActive = true;
+
+    // 캔버스 사이즈 설정
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // 마우스 움직임 기록 및 눈동자 제어
+    window.addEventListener('mousemove', (e) => {
+        if (isFinished) return;
+
+        // 마우스 경로 기록
+        path.push({ x: e.clientX, y: e.clientY, time: Date.now() });
+
+        // 눈동자 움직임
+        pupils.forEach(pupil => {
+            const rect = pupil.parentElement.getBoundingClientRect();
+            const eyeX = rect.left + rect.width / 2;
+            const eyeY = rect.top + rect.height / 2;
+            
+            const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
+            const distance = Math.min(rect.width / 4, Math.hypot(e.clientX - eyeX, e.clientY - eyeY) / 10);
+            
+            const moveX = Math.cos(angle) * distance;
+            const moveY = Math.sin(angle) * distance;
+            
+            pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+    });
+
+    // 시선/존재 동기화 감지 (Focus/Blur 및 Mouse Leave)
+    function setWaiting(isWaiting) {
+        if (isFinished) return;
+        if (isWaiting) {
+            eyesContainer.style.display = 'none';
+            statusMsg.style.display = 'block';
+        } else {
+            eyesContainer.style.display = 'flex';
+            statusMsg.style.display = 'none';
         }
+    }
 
-        function initParticles() {
-            particles = [];
-            // 사각형 형태의 목표 지점 계산
-            let spacingX = width * 0.6 / cols;
-            let spacingY = height * 0.6 / rows;
-            let startX = (width - (spacingX * (cols-1))) / 2;
-            let startY = (height - (spacingY * (rows-1))) / 2;
+    window.addEventListener('blur', () => { isTabActive = false; setWaiting(true); });
+    window.addEventListener('focus', () => { isTabActive = true; setWaiting(false); });
+    document.addEventListener('mouseleave', () => setWaiting(true));
+    document.addEventListener('mouseenter', () => setWaiting(false));
 
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    let targetX = startX + i * spacingX;
-                    let targetY = startY + j * spacingY;
-                    particles.push(new Particle(targetX, targetY));
-                }
+    // 타이머 로직
+    const timerInterval = setInterval(() => {
+        if (isTabActive && !isFinished) {
+            timeLeft--;
+            timerSpan.textContent = Math.max(0, timeLeft);
+
+            if (timeLeft <= 0) {
+                finishGame();
             }
         }
+    }, 1000);
 
-        function draw() {
-            background(255); // 흔적을 남기지 않고 매 순간 갱신
-            let elapsed = millis() - startTime;
-            let progress = constrain(elapsed / totalDuration, 0, 1);
+    // 400초 달성 시 종료 처리
+    function finishGame() {
+        isFinished = true;
+        clearInterval(timerInterval);
+        
+        document.body.style.backgroundColor = 'white';
+        eyesContainer.style.display = 'none';
+        statusMsg.style.display = 'none';
+        
+        canvas.style.display = 'block';
+        drawPath();
+        uiOverlay.style.display = 'block';
+    }
 
-            if (elapsed < totalDuration) {
-                for (let p of particles) {
-                    p.update(progress);
-                    p.interact();
-                    p.show();
-                }
-            } else if (!isEnded) {
-                isEnded = true;
-                document.getElementById('credit-screen').classList.add('visible');
+    // 마우스 경로 그리기
+    function drawPath() {
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        if (path.length > 0) {
+            ctx.moveTo(path[0].x, path[0].y);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i].x, path[i].y);
             }
         }
+        ctx.stroke();
+    }
 
-        class Particle {
-            constructor(tx, ty) {
-                this.target = createVector(tx, ty);
-                // 처음엔 완전히 랜덤한 위치에서 시작
-                this.pos = createVector(random(width), random(height));
-                this.vel = createVector(0, 0);
-                this.noiseOffset = random(1000);
-            }
+    // 이미지 저장 기능
+    downloadBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'my-gaze-path.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+</script>
 
-            update(prog) {
-                // 시간이 흐를수록(prog가 커질수록) 목표 지점으로 끌어당기는 힘이 강해짐
-                let noiseForce = map(prog, 0, 1, 2, 0); // 처음엔 많이 흔들림
-                let n = noise(this.noiseOffset + frameCount * 0.01);
-                let angle = n * TWO_PI * 4;
-                let noiseVec = p5.Vector.fromAngle(angle).mult(noiseForce);
-
-                // 목표 지점으로 향하는 스무스한 이동 (Lerp)
-                let arrivalStrength = map(prog, 0, 1, 0.01, 0.2);
-                this.pos.x = lerp(this.pos.x, this.target.x, arrivalStrength);
-                this.pos.y = lerp(this.pos.y, this.target.y, arrivalStrength);
-                
-                this.pos.add(noiseVec);
-                this.noiseOffset += 0.01;
-            }
-
-            interact() {
-                let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
-                if (d < 50) {
-                    // 마우스가 오면 기계가 방해받아 움찔거림
-                    this.pos.add(p5.Vector.random2D().mult(10));
-                }
-            }
-
-            show() {
-                fill(0);
-                noStroke();
-                rect(this.pos.x, this.pos.y, 3, 3); // 작은 사각형 점
-            }
-        }
-
-        function resetSketch() {
-            document.getElementById('credit-screen').classList.remove('visible');
-            startTime = millis();
-            isEnded = false;
-            initParticles();
-        }
-
-        function windowResized() {
-            let container = document.getElementById('canvas-container');
-            resizeCanvas(container.offsetWidth, container.offsetHeight);
-            initParticles();
-        }
-    </script>
 </body>
 </html>
