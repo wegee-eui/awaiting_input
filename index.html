@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -85,6 +85,32 @@
             padding: 12px 24px; background: black; color: white;
             border: none; cursor: pointer; font-weight: bold;
         }
+
+        /* 눈꺼풀(Eyelid) 스타일 */
+        .eyelid {
+            position: absolute;
+            top: -100%; /* 평소에는 눈 위로 숨겨둠 */
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 2; /* 눈동자(z-index: 1)보다 위에 오도록 */
+            /* 4초마다 0.5초 동안 깜빡임 */
+            animation: blink 4s infinite;
+        }
+
+        /* 오른쪽 눈꺼풀은 눈 모양과 같이 대칭 처리 */
+        .eye-container:last-child .eyelid {
+            transform: scaleX(-1);
+        }
+
+        /* 깜빡임 애니메이션 핵심 로직 */
+        @keyframes blink {
+            0%, 90% { top: -100%; } /* 3.5초(90%) 동안은 열려 있음 */
+            95% { top: 0%; }        /* 0.2초 동안 닫힘 */
+            100% { top: -100%; }    /* 0.3초 동안 다시 열림 (합쳐서 약 0.5초) */
+        }
+        
     </style>
 </head>
 <body>
@@ -94,10 +120,12 @@
         <div class="eye-container">
             <div class="eye-shape"></div>
             <div class="pupil"></div>
+            <div class="eyelid"></div> </div>
         </div>
         <div class="eye-container">
             <div class="eye-shape"></div>
             <div class="pupil"></div>
+            <div class="eyelid"></div> </div>
         </div>
     </div>
     
