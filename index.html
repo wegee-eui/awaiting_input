@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>400 Seconds of Waiting - Wegee</title>
+    <title>400s Convergence - Wegee</title>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,20 +15,14 @@
             font-family: sans-serif;
         }
         .container { width: 100%; display: flex; justify-content: center; align-items: center; }
-        
-        /* 반응형 50% 박스 */
         .content-box {
-            width: 50vw; 
-            height: 37.5vw; /* 4:3 비율 유지 (50 * 0.75) */
-            min-width: 300px;
-            min-height: 225px;
+            width: 50vw; height: 37.5vw;
+            min-width: 300px; min-height: 225px;
             position: relative;
-            background-color: #ffffff; 
-            border: 1px solid #000000; /* 영역 확인을 위해 검정 테두리 */
+            background-color: #fff;
+            border: 1px solid #000;
         }
-
         #canvas-container { width: 100%; height: 100%; }
-
         #credit-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -42,112 +36,6 @@
     </style>
 </head>
 <body>
-
     <div class="container">
         <div class="content-box" id="parent-box">
             <div id="canvas-container"></div>
-            <div id="credit-screen">
-                <p><strong>400 Seconds of Waiting</strong></p>
-                <p>Concept & Production: Wegee</p>
-                <p>© 2026. Wegee.</p>
-                <button class="replay-btn" onclick="resetSketch()">REPLAY</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let particles = [];
-        let startTime;
-        const totalDuration = 400 * 1000;
-        let isEnded = false;
-
-        function setup() {
-            let canvasContainer = document.getElementById('canvas-container');
-            // 부모 박스의 실제 크기를 가져와서 캔버스 생성
-            let w = canvasContainer.offsetWidth;
-            let h = canvasContainer.offsetHeight;
-            let canvas = createCanvas(w, h);
-            canvas.parent('canvas-container');
-            
-            background(255);
-            startTime = millis();
-            initParticles();
-        }
-
-        function initParticles() {
-            particles = [];
-            for (let i = 0; i < 60; i++) { // 개수 약간 증가
-                particles.push(new Particle());
-            }
-        }
-
-        function draw() {
-            let elapsed = millis() - startTime;
-
-            if (elapsed < totalDuration) {
-                for (let p of particles) {
-                    p.update();
-                    p.interact();
-                    p.show();
-                }
-            } else if (!isEnded) {
-                isEnded = true;
-                document.getElementById('credit-screen').classList.add('visible');
-            }
-        }
-
-        class Particle {
-            constructor() {
-                this.pos = createVector(random(width), random(height));
-                this.vel = p5.Vector.random2D().mult(random(0.5, 2));
-                this.noiseOffset = random(1000);
-            }
-
-            update() {
-                let n = noise(this.noiseOffset);
-                let angle = map(n, 0, 1, 0, TWO_PI * 4);
-                let noiseVec = p5.Vector.fromAngle(angle).mult(0.2);
-                this.vel.add(noiseVec);
-                this.vel.limit(2);
-                this.pos.add(this.vel);
-                this.noiseOffset += 0.01;
-
-                if (this.pos.x < 0) this.pos.x = width;
-                if (this.pos.x > width) this.pos.x = 0;
-                if (this.pos.y < 0) this.pos.y = height;
-                if (this.pos.y > height) this.pos.y = 0;
-            }
-
-            interact() {
-                let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
-                if (d < 100) {
-                    // 마우스 피하기 강도를 높임
-                    let flee = createVector(this.pos.x - mouseX, this.pos.y - mouseY);
-                    flee.setMag(3); 
-                    this.pos.add(flee);
-                }
-            }
-
-            show() {
-                stroke(0, 0, 0, 25); // 투명도를 약간 높여 흔적이 더 잘 보이게 수정
-                strokeWeight(1.5);   // 점의 크기를 살짝 키움
-                point(this.pos.x, this.pos.y);
-            }
-        }
-
-        function resetSketch() {
-            document.getElementById('credit-screen').classList.remove('visible');
-            background(255);
-            startTime = millis();
-            isEnded = false;
-            initParticles();
-        }
-
-        function windowResized() {
-            let canvasContainer = document.getElementById('canvas-container');
-            resizeCanvas(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
-            background(255);
-        }
-    </script>
-</body>
-</html>
