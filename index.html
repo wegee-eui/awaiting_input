@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Gaze Project - 400 Seconds</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <title>400 Seconds Gaze Project</title>
     <style>
         body, html {
             margin: 0; padding: 0;
@@ -13,50 +12,108 @@
             font-family: 'Pretendard', sans-serif;
         }
 
-        /* 3D 캔버스가 들어갈 컨테이너 */
-        #canvas-parent {
-            width: 100%; height: 100%;
+        #container {
             display: flex; justify-content: center; align-items: center;
+            width: 100%; height: 100%; position: relative;
+        }
+
+        .eyes-wrapper {
+            display: flex; justify-content: space-between;
+            width: 80%; max-width: 1400px; gap: 10%;
+        }
+
+        /* 눈과 눈동자를 묶는 컨테이너 */
+        .eye-container {
+            flex: 1;
+            aspect-ratio: 1.8 / 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 눈 형태 (오른쪽만 반전됨) */
+       .eye-shape {
+            background-color: white;
+            width: 70%;
+            height: 85%;
+            position: absolute;
+            /* 날카로운 대칭 눈매 수치 */
+            border-radius: 40% 60% 40% 60% / 30% 70% 30% 70%;
+        }
+        
+        .eye-container:last-child .eye-shape {
+            transform: scaleX(-1);
+        }
+
+        /* 눈동자 (정방향 유지) */
+        .pupil {
+            background-color: black;
+            width: 40%; /* 사진 비율에 맞춘 최적 크기 */
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 1;
+            transition: transform 0.08s ease-out; /* 반응 속도 개선 */
+            will-change: transform;
         }
 
         #status-msg {
             display: none; color: white; font-size: 5vw; font-weight: bold;
             text-align: center; width: 80%; position: absolute;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            pointer-events: none; /* 마우스 방해 금지 */
         }
 
         #svgPathContainer {
             position: absolute; top: 0; left: 0;
             width: 100vw; height: 100vh;
-            display: none; background-color: white; z-index: 100;
+            display: none; background-color: white; z-index: 5;
         }
+
+        #pathSvg { width: 100%; height: 100%; display: block; }
 
         #ui-overlay {
             display: none; position: absolute; bottom: 8%;
             left: 50%; transform: translateX(-50%);
-            text-align: center; z-index: 110;
+            text-align: center; z-index: 10;
         }
 
         .credits { margin-bottom: 20px; color: black; font-size: 14px; line-height: 1.6; }
-        #download-btn { padding: 12px 24px; background: black; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .credits a { color: black; text-decoration: underline; }
+
+        #download-btn {
+            padding: 12px 24px; background: black; color: white;
+            border: none; cursor: pointer; font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
-<div id="canvas-parent"></div>
-<div id="status-msg">Waiting for <span id="out-timer">0</span> seconds</div>
-
-<div id="svgPathContainer">
-    <svg id="pathSvg" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-        <polyline id="pathPolyline" fill="none" stroke="black" stroke-width="2" />
-    </svg>
+<div id="container">
+    <div class="eyes-wrapper" id="eyes-container">
+        <div class="eye-container">
+            <div class="eye-shape"></div>
+            <div class="pupil"></div>
+        </div>
+        <div class="eye-container">
+            <div class="eye-shape"></div>
+            <div class="pupil"></div>
+        </div>
+    </div>
+    
+    <div id="status-msg">Waiting for <span id="out-timer">0</span> seconds</div>
+    
+    <div id="svgPathContainer">
+        <svg id="pathSvg" preserveAspectRatio="xMidYMid meet">
+            <polyline id="pathPolyline" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </div>
 </div>
 
 <div id="ui-overlay">
     <div class="credits">
         You waited 400 seconds.<br>
-        Concept & Production: <a href="https://www.instagram.com/wegee.eui/" target="_blank" style="color:black;">Wegee @wegee.eui</a>
+        Concept & Production: <a href="https://www.instagram.com/wegee.eui/" target="_blank">Wegee @wegee.eui</a>
     </div>
     <button id="download-btn">이미지 저장하기</button>
 </div>
@@ -65,158 +122,117 @@
     const TARGET_SECONDS = 400; 
     const MSG_DELAY_MS = 200; 
 
-    let eyeModel;
     let totalOutTimeMs = 0;
     let outStartTime = null;
-    let stayStartTime;
+    let stayStartTime = Date.now();
     let path = [];
     let isFinished = false;
     let msgTimeout = null;
 
-    function setup() {
-        // 캔버스를 생성하고 #canvas-parent 안에 넣음
-        let cnv = createCanvas(windowWidth, windowHeight, WEBGL);
-        cnv.parent('canvas-parent');
-        angleMode(DEGREES);
-        buildEye();
-        stayStartTime = millis();
-    }
-
-    function buildEye() {
-        if (eyeModel) freeGeometry(eyeModel);
-        eyeModel = buildGeometry(() => {
-            // 흰자 (Sclera) - 요청하신 40/60 비율 비대칭 느낌 적용
-            push();
-            fill(255);
-            noStroke();
-            rotateZ(5); // 눈매의 기울기
-            ellipsoid(120, 85, 40); 
-            pop();
-
-            // 눈동자 (Pupil) - 40% 크기 비율
-            push();
-            fill(0);
-            translate(0, 0, 32); 
-            scale(1, 1, 0.4);
-            sphere(45); 
-            pop();
-        });
-        eyeModel.normalize();
-    }
-
-    function draw() {
+    // 마우스 추적 (눈동자 가동 범위 최적화)
+    window.addEventListener('mousemove', (e) => {
         if (isFinished) return;
-        background(0);
+        path.push({ x: e.clientX, y: e.clientY });
 
-        // 시선/존재 동기화 체크
-        checkFocus();
-
-        // 3D 조명 및 재질
-        ambientLight(100);
-        pointLight(255, 255, 255, 200, -200, 300);
-        specularMaterial(255);
-        shininess(100);
-
-        // 마우스 경로 기록
-        if (focused) path.push({ x: mouseX, y: mouseY });
-
-        // 양쪽 눈 그리기 (가로 80% 비율 배치)
-        let eyeSpacing = width * 0.4; 
-        
-        for (let mirror of [-1, 1]) {
-            push();
-            translate(mirror * (eyeSpacing / 2), 0, 0);
+        const pupils = document.querySelectorAll('.pupil');
+        pupils.forEach(pupil => {
+            const rect = pupil.parentElement.getBoundingClientRect();
+            const eyeX = rect.left + rect.width / 2;
+            const eyeY = rect.top + rect.height / 2;
             
-            // 오른쪽 눈은 가로 대칭 (scaleX -1 효과)
-            if (mirror === 1) scale(-1, 1, 1);
+            const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
+            
+            // 가동 범위 제한 (rect.width / 5 정도로 줄여서 흰자 안에서만 놀게 함)
+            const maxMove = rect.width / 5;
+            const dist = Math.min(maxMove, Math.hypot(e.clientX - eyeX, e.clientY - eyeY) / 10);
+            
+            pupil.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
+        });
+    });
 
-            // 마우스 바라보기 (눈동자 움직임 구현)
-            let rotY = map(mouseX - width/2, -width/2, width/2, -25, 25);
-            let rotX = map(mouseY - height/2, -height/2, height/2, 20, -20);
-            rotateY(rotY * mirror); 
-            rotateX(rotX);
+    function userLeft() {
+        if (isFinished) return;
+        if (!outStartTime) outStartTime = Date.now();
+        msgTimeout = setTimeout(() => {
+            document.getElementById('eyes-container').style.opacity = '0'; // 부드럽게 사라짐
+            document.getElementById('status-msg').style.display = 'block';
+        }, MSG_DELAY_MS);
+    }
 
-            model(eyeModel);
-            pop();
+    function userReturned() {
+        if (isFinished) return;
+        if (outStartTime) {
+            totalOutTimeMs += Date.now() - outStartTime;
+            outStartTime = null;
         }
+        clearTimeout(msgTimeout);
+        document.getElementById('eyes-container').style.opacity = '1';
+        document.getElementById('status-msg').style.display = 'none';
+    }
 
-        // 목표 달성 체크
-        if (millis() - stayStartTime - totalOutTimeMs >= TARGET_SECONDS * 1000) {
+    window.addEventListener('blur', userLeft);
+    window.addEventListener('focus', userReturned);
+    document.addEventListener('mouseleave', userLeft);
+    document.addEventListener('mouseenter', userReturned);
+
+    setInterval(() => {
+        if (isFinished) return;
+        let currentOut = totalOutTimeMs;
+        if (outStartTime) currentOut += Date.now() - outStartTime;
+        document.getElementById('out-timer').textContent = Math.floor(currentOut / 1000);
+
+        if (Date.now() - stayStartTime - totalOutTimeMs >= TARGET_SECONDS * 1000) {
             finish();
         }
-    }
-
-    function checkFocus() {
-        if (!focused) {
-            if (!outStartTime) outStartTime = millis();
-            if (!msgTimeout) {
-                msgTimeout = setTimeout(() => {
-                    document.getElementById('status-msg').style.display = 'block';
-                }, MSG_DELAY_MS);
-            }
-        } else {
-            if (outStartTime) {
-                totalOutTimeMs += millis() - outStartTime;
-                outStartTime = null;
-            }
-            if (msgTimeout) {
-                clearTimeout(msgTimeout);
-                msgTimeout = null;
-            }
-            document.getElementById('status-msg').style.display = 'none';
-        }
-        
-        let currentOut = totalOutTimeMs + (outStartTime ? (millis() - outStartTime) : 0);
-        document.getElementById('out-timer').textContent = Math.floor(currentOut / 1000);
-    }
+    }, 100);
 
     function finish() {
         isFinished = true;
-        noLoop(); // p5.js 루프 정지
-        document.getElementById('canvas-parent').style.display = 'none';
-        document.getElementById('svgPathContainer').style.display = 'block';
-        document.getElementById('ui-overlay').style.display = 'block';
-
-        const poly = document.getElementById('pathPolyline');
-        const svg = document.getElementById('pathSvg');
+        document.body.style.backgroundColor = 'white';
+        document.getElementById('eyes-container').style.display = 'none';
+        document.getElementById('status-msg').style.display = 'none';
         
+        const svgCont = document.getElementById('svgPathContainer');
+        const svg = document.getElementById('pathSvg');
+        const poly = document.getElementById('pathPolyline');
+        
+        svgCont.style.display = 'block';
+
         const xs = path.map(p => p.x);
         const ys = path.map(p => p.y);
         const minX = Math.min(...xs) - 50;
         const minY = Math.min(...ys) - 50;
-        const w = Math.max(...xs) - minX + 50;
-        const h = Math.max(...ys) - minY + 50;
+        const width = Math.max(...xs) - minX + 50;
+        const height = Math.max(...ys) - minY + 50;
 
-        svg.setAttribute('viewBox', `${minX} ${minY} ${w} ${h}`);
+        svg.setAttribute('viewBox', `${minX} ${minY} ${width} ${height}`);
         poly.setAttribute('points', path.map(p => `${p.x},${p.y}`).join(' '));
+        
+        document.getElementById('ui-overlay').style.display = 'block';
     }
 
-    function windowResized() {
-        resizeCanvas(windowWidth, windowHeight);
-    }
-
-    // 다운로드 로직은 기존과 동일
     document.getElementById('download-btn').addEventListener('click', () => {
         const svg = document.getElementById('pathSvg');
         const svgData = new XMLSerializer().serializeToString(svg);
         const canvas = document.createElement('canvas');
         const viewBox = svg.viewBox.baseVal;
+        
         canvas.width = viewBox.width * 3;
         canvas.height = viewBox.height * 3;
         const ctx = canvas.getContext('2d');
         const img = new Image();
+        
         img.onload = () => {
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             const link = document.createElement('a');
-            link.download = 'gaze-path.png';
+            link.download = 'my-gaze-path.png';
             link.href = canvas.toDataURL();
             link.click();
         };
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     });
 </script>
-
 </body>
 </html>
