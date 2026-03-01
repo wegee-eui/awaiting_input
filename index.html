@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,7 @@
             margin: 0; padding: 0;
             width: 100%; height: 100%;
             overflow: hidden; background-color: black;
-            font-family: 'Pretendard', sans-serif;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
         }
 
         #container {
@@ -17,12 +17,16 @@
             width: 100%; height: 100%; position: relative;
         }
 
+        /* 1. 눈 크기 및 배치 제한 (max-width 적용) */
         .eyes-wrapper {
-            display: flex; justify-content: space-between;
-            width: 80%; max-width: 1400px; gap: 10%;
+            display: flex; 
+            justify-content: space-between;
+            width: 80%; 
+            max-width: 900px; /* 데스크탑에서 너무 커지지 않도록 제한 */
+            gap: 10%;
+            transition: opacity 0.4s ease; /* 나타나고 사라질 때 부드럽게 */
         }
 
-        /* 눈과 눈동자를 묶는 컨테이너 */
         .eye-container {
             flex: 1;
             aspect-ratio: 1.8 / 1;
@@ -33,49 +37,79 @@
             align-items: center;
         }
 
-        /* 눈 형태 (오른쪽만 반전됨) */
-       .eye-shape {
+        /* 비대칭 날카로운 눈매 */
+        .eye-shape {
             background-color: white;
-            width: 70%;
-            height: 85%;
+            width: 100%;
+            height: 100%;
             position: absolute;
-            /* 날카로운 대칭 눈매 수치 */
             border-radius: 40% 60% 40% 60% / 30% 70% 30% 70%;
         }
-        
+
+        /* 오른쪽 눈 대칭 반전 */
         .eye-container:last-child .eye-shape {
             transform: scaleX(-1);
         }
 
-        /* 눈동자 (정방향 유지) */
         .pupil {
             background-color: black;
-            width: 40%; /* 사진 비율에 맞춘 최적 크기 */
+            width: 38%;
             aspect-ratio: 1 / 1;
             border-radius: 50%;
             position: absolute;
             z-index: 1;
-            transition: transform 0.08s ease-out; /* 반응 속도 개선 */
+            transition: transform 0.08s ease-out;
             will-change: transform;
         }
 
-        #status-msg {
-            display: none; color: white; font-size: 5vw; font-weight: bold;
-            text-align: center; width: 80%; position: absolute;
+        /* 2. 눈꺼풀 애니메이션 (4초 주기, 0.5초 깜빡임) */
+        .eyelid {
+            position: absolute;
+            top: -110%; 
+            left: 0;
+            width: 100%;
+            height: 110%; /* 살짝 더 길게 설정해서 완벽히 가림 */
+            background-color: black;
+            z-index: 2; 
+            animation: blink 4s infinite;
         }
 
+        .eye-container:last-child .eyelid {
+            transform: scaleX(-1);
+        }
+
+        @keyframes blink {
+            0%, 90% { top: -110%; } 
+            95% { top: 0%; }        
+            100% { top: -110%; }    
+        }
+
+        /* 3. 대기 문구 스타일 */
+        #status-msg {
+            display: none; 
+            color: white; 
+            font-size: 4vw; 
+            font-weight: bold;
+            text-align: center; 
+            width: 100%; 
+            position: absolute;
+            z-index: 10;
+        }
+
+        /* 4. 결과물 드로잉 영역 */
         #svgPathContainer {
             position: absolute; top: 0; left: 0;
             width: 100vw; height: 100vh;
-            display: none; background-color: white; z-index: 5;
+            display: none; background-color: white; z-index: 20;
         }
 
         #pathSvg { width: 100%; height: 100%; display: block; }
 
+        /* 결과 화면 UI */
         #ui-overlay {
             display: none; position: absolute; bottom: 8%;
             left: 50%; transform: translateX(-50%);
-            text-align: center; z-index: 10;
+            text-align: center; z-index: 30;
         }
 
         .credits { margin-bottom: 20px; color: black; font-size: 14px; line-height: 1.6; }
@@ -85,32 +119,6 @@
             padding: 12px 24px; background: black; color: white;
             border: none; cursor: pointer; font-weight: bold;
         }
-
-        /* 눈꺼풀(Eyelid) 스타일 */
-        .eyelid {
-            position: absolute;
-            top: -100%; /* 평소에는 눈 위로 숨겨둠 */
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            z-index: 2; /* 눈동자(z-index: 1)보다 위에 오도록 */
-            /* 4초마다 0.5초 동안 깜빡임 */
-            animation: blink 4s infinite;
-        }
-
-        /* 오른쪽 눈꺼풀은 눈 모양과 같이 대칭 처리 */
-        .eye-container:last-child .eyelid {
-            transform: scaleX(-1);
-        }
-
-        /* 깜빡임 애니메이션 핵심 로직 */
-        @keyframes blink {
-            0%, 90% { top: -100%; } /* 3.5초(90%) 동안은 열려 있음 */
-            95% { top: 0%; }        /* 0.2초 동안 닫힘 */
-            100% { top: -100%; }    /* 0.3초 동안 다시 열림 (합쳐서 약 0.5초) */
-        }
-        
     </style>
 </head>
 <body>
@@ -120,12 +128,12 @@
         <div class="eye-container">
             <div class="eye-shape"></div>
             <div class="pupil"></div>
-            <div class="eyelid"></div> </div>
+            <div class="eyelid"></div>
         </div>
         <div class="eye-container">
             <div class="eye-shape"></div>
             <div class="pupil"></div>
-            <div class="eyelid"></div> </div>
+            <div class="eyelid"></div>
         </div>
     </div>
     
@@ -148,7 +156,8 @@
 
 <script>
     const TARGET_SECONDS = 400; 
-    const MSG_DELAY_MS = 200; 
+    const MSG_DELAY_MS = 200; // 나갔을 때 지연 시간 (0.2초)
+    const RETURN_DELAY_MS = 500; // 돌아왔을 때 지연 시간 (0.5초)
 
     let totalOutTimeMs = 0;
     let outStartTime = null;
@@ -157,7 +166,7 @@
     let isFinished = false;
     let msgTimeout = null;
 
-    // 마우스 추적 (눈동자 가동 범위 최적화)
+    // 마우스 추적 및 눈동자 움직임
     window.addEventListener('mousemove', (e) => {
         if (isFinished) return;
         path.push({ x: e.clientX, y: e.clientY });
@@ -167,35 +176,46 @@
             const rect = pupil.parentElement.getBoundingClientRect();
             const eyeX = rect.left + rect.width / 2;
             const eyeY = rect.top + rect.height / 2;
-            
             const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
-            
-            // 가동 범위 제한 (rect.width / 5 정도로 줄여서 흰자 안에서만 놀게 함)
             const maxMove = rect.width / 5;
-            const dist = Math.min(maxMove, Math.hypot(e.clientX - eyeX, e.clientY - eyeY) / 10);
-            
+            const dist = Math.min(maxMove, Math.hypot(e.clientX - eyeX, e.clientY - eyeY) / 12);
             pupil.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
         });
     });
 
+    // 사용자가 창을 벗어날 때
     function userLeft() {
         if (isFinished) return;
         if (!outStartTime) outStartTime = Date.now();
+        
         msgTimeout = setTimeout(() => {
-            document.getElementById('eyes-container').style.opacity = '0'; // 부드럽게 사라짐
+            document.getElementById('eyes-container').style.opacity = '0';
             document.getElementById('status-msg').style.display = 'block';
         }, MSG_DELAY_MS);
     }
 
+    // 사용자가 창으로 돌아올 때 (0.5초 지속 로직 추가)
     function userReturned() {
         if (isFinished) return;
+        
+        // 시간 계산은 즉시 업데이트
         if (outStartTime) {
             totalOutTimeMs += Date.now() - outStartTime;
             outStartTime = null;
         }
+
+        // 나가는 중이었던 타이머 취소
         clearTimeout(msgTimeout);
-        document.getElementById('eyes-container').style.opacity = '1';
-        document.getElementById('status-msg').style.display = 'none';
+        msgTimeout = null;
+
+        // 0.5초 대기 후 눈 표시 및 문구 숨김
+        setTimeout(() => {
+            // 그 사이에 다시 나가지 않았을 때만 실행
+            if (!outStartTime) {
+                document.getElementById('eyes-container').style.opacity = '1';
+                document.getElementById('status-msg').style.display = 'none';
+            }
+        }, RETURN_DELAY_MS);
     }
 
     window.addEventListener('blur', userLeft);
@@ -203,12 +223,15 @@
     document.addEventListener('mouseleave', userLeft);
     document.addEventListener('mouseenter', userReturned);
 
+    // 메인 루프 (카운트다운 및 종료 체크)
     setInterval(() => {
         if (isFinished) return;
+        
         let currentOut = totalOutTimeMs;
         if (outStartTime) currentOut += Date.now() - outStartTime;
         document.getElementById('out-timer').textContent = Math.floor(currentOut / 1000);
 
+        // 실제 체류 시간 계산 (현재시간 - 시작시간 - 나간시간)
         if (Date.now() - stayStartTime - totalOutTimeMs >= TARGET_SECONDS * 1000) {
             finish();
         }
@@ -226,19 +249,22 @@
         
         svgCont.style.display = 'block';
 
-        const xs = path.map(p => p.x);
-        const ys = path.map(p => p.y);
-        const minX = Math.min(...xs) - 50;
-        const minY = Math.min(...ys) - 50;
-        const width = Math.max(...xs) - minX + 50;
-        const height = Math.max(...ys) - minY + 50;
+        if (path.length > 0) {
+            const xs = path.map(p => p.x);
+            const ys = path.map(p => p.y);
+            const minX = Math.min(...xs) - 50;
+            const minY = Math.min(...ys) - 50;
+            const w = Math.max(...xs) - minX + 50;
+            const h = Math.max(...ys) - minY + 50;
 
-        svg.setAttribute('viewBox', `${minX} ${minY} ${width} ${height}`);
-        poly.setAttribute('points', path.map(p => `${p.x},${p.y}`).join(' '));
+            svg.setAttribute('viewBox', `${minX} ${minY} ${w} ${h}`);
+            poly.setAttribute('points', path.map(p => `${p.x},${p.y}`).join(' '));
+        }
         
         document.getElementById('ui-overlay').style.display = 'block';
     }
 
+    // 이미지 저장
     document.getElementById('download-btn').addEventListener('click', () => {
         const svg = document.getElementById('pathSvg');
         const svgData = new XMLSerializer().serializeToString(svg);
