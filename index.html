@@ -39,3 +39,117 @@
     <div class="container">
         <div class="content-box" id="parent-box">
             <div id="canvas-container"></div>
+            <div id="credit-screen">
+                <p><strong>The Will of Machine: Order from Chaos</strong></p>
+                <p>Concept & Production: Wegee</p>
+                <p>© 2026. Wegee.</p>
+                <button class="replay-btn" onclick="resetSketch()">REPLAY</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let particles = [];
+        let startTime;
+        const totalDuration = 10 * 1000; // 400초
+        let isEnded = false;
+        let cols = 20; // 가로 픽셀 수
+        let rows = 15; // 세로 픽셀 수
+
+        function setup() {
+            let container = document.getElementById('canvas-container');
+            let canvas = createCanvas(container.offsetWidth, container.offsetHeight);
+            canvas.parent('canvas-container');
+            startTime = millis();
+            initParticles();
+        }
+
+        function initParticles() {
+            particles = [];
+            // 사각형 형태의 목표 지점 계산
+            let spacingX = width * 0.6 / cols;
+            let spacingY = height * 0.6 / rows;
+            let startX = (width - (spacingX * (cols-1))) / 2;
+            let startY = (height - (spacingY * (rows-1))) / 2;
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    let targetX = startX + i * spacingX;
+                    let targetY = startY + j * spacingY;
+                    particles.push(new Particle(targetX, targetY));
+                }
+            }
+        }
+
+        function draw() {
+            background(255); // 흔적을 남기지 않고 매 순간 갱신
+            let elapsed = millis() - startTime;
+            let progress = constrain(elapsed / totalDuration, 0, 1);
+
+            if (elapsed < totalDuration) {
+                for (let p of particles) {
+                    p.update(progress);
+                    p.interact();
+                    p.show();
+                }
+            } else if (!isEnded) {
+                isEnded = true;
+                document.getElementById('credit-screen').classList.add('visible');
+            }
+        }
+
+        class Particle {
+            constructor(tx, ty) {
+                this.target = createVector(tx, ty);
+                // 처음엔 완전히 랜덤한 위치에서 시작
+                this.pos = createVector(random(width), random(height));
+                this.vel = createVector(0, 0);
+                this.noiseOffset = random(1000);
+            }
+
+            update(prog) {
+                // 시간이 흐를수록(prog가 커질수록) 목표 지점으로 끌어당기는 힘이 강해짐
+                let noiseForce = map(prog, 0, 1, 2, 0); // 처음엔 많이 흔들림
+                let n = noise(this.noiseOffset + frameCount * 0.01);
+                let angle = n * TWO_PI * 4;
+                let noiseVec = p5.Vector.fromAngle(angle).mult(noiseForce);
+
+                // 목표 지점으로 향하는 스무스한 이동 (Lerp)
+                let arrivalStrength = map(prog, 0, 1, 0.001, 0.1);
+                this.pos.x = lerp(this.pos.x, this.target.x, arrivalStrength);
+                this.pos.y = lerp(this.pos.y, this.target.y, arrivalStrength);
+                
+                this.pos.add(noiseVec);
+                this.noiseOffset += 0.01;
+            }
+
+            interact() {
+                let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
+                if (d < 50) {
+                    // 마우스가 오면 기계가 방해받아 움찔거림
+                    this.pos.add(p5.Vector.random2D().mult(10));
+                }
+            }
+
+            show() {
+                fill(0);
+                noStroke();
+                rect(this.pos.x, this.pos.y, 3, 3); // 작은 사각형 점
+            }
+        }
+
+        function resetSketch() {
+            document.getElementById('credit-screen').classList.remove('visible');
+            startTime = millis();
+            isEnded = false;
+            initParticles();
+        }
+
+        function windowResized() {
+            let container = document.getElementById('canvas-container');
+            resizeCanvas(container.offsetWidth, container.offsetHeight);
+            initParticles();
+        }
+    </script>
+</body>
+</html>
