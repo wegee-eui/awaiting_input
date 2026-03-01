@@ -115,7 +115,7 @@
                 let noiseVec = p5.Vector.fromAngle(angle).mult(noiseForce);
 
                 // 목표 지점으로 향하는 스무스한 이동 (Lerp)
-                let arrivalStrength = map(prog, 0, 1, 0.001, 0.1);
+                let arrivalStrength = map(prog, 0, 1, 0.01, 0.2);
                 this.pos.x = lerp(this.pos.x, this.target.x, arrivalStrength);
                 this.pos.y = lerp(this.pos.y, this.target.y, arrivalStrength);
                 
